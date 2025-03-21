@@ -1,6 +1,33 @@
-@font-face {
-    font-family: 'jetbrains';
-    src: url('/font/JetBrainsMono-ExtraBold.ttf') format('truetype');
+/*  */
+
+#gameId {
+    width: 90%;  /* Takes up 90% of container width */
+    margin: 0 auto;
+    max-width: 100%;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 10vh;
+    background-color: #ffffff;
+}
+
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 900px;
+    width: 100%;
+    padding: 2rem;
+    gap: 2rem;
+}
+
+h1 {
+    font-family: 'Clear Sans', serif;
+    font-weight: bold;
+    margin-bottom: 1rem;  /* Space below heading */
 }
 
 /* konfig buat mobile dan desktop */
@@ -9,7 +36,7 @@
         flex-direction: column;
         text-align: center;
     }
-    
+
     .image-section {
         order: -1; /* pindah gambar ke atas di mobile */
     }
