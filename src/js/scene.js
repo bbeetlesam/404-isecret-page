@@ -1,11 +1,11 @@
-// import { game } from "./main.js";
-
+// Description: Main Scene
 export class MainScene extends Phaser.Scene {
     constructor()
     {
         super("MainScene");
     }
     
+    // Load assets
     preload()
     {
         // this.load.image("sky", "https://labs.phaser.io/assets/skies/space3.png");
@@ -13,6 +13,7 @@ export class MainScene extends Phaser.Scene {
         // this.load.svg({key: "tes", url: "./img/milk-tea-svgrepo-com.svg", svgConfig: {width: 800, height: 800}});
     }
     
+    // Create game objects
     create()
     {
         const img = this.add.image(this.scale.width/2, this.scale.height/2, 'sky');
@@ -51,6 +52,7 @@ export class MainScene extends Phaser.Scene {
         });
     }
 
+    // Update game state per frame
     update(time, delta)
     {
 
