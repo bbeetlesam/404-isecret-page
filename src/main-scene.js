@@ -8,7 +8,7 @@ export class MainScene extends Phaser.Scene {
     
     preload()
     {
-        this.load.image("sky", "https://labs.phaser.io/assets/skies/space3.png");
+        this.load.image("sky", "./img/B1013-6.png");
         this.load.image("sky", "./img/Screenshot-2024-10-05-235618.png");
         // this.load.svg({key: "tes", url: "./img/milk-tea-svgrepo-com.svg", svgConfig: {width: 800, height: 800}});
     }
