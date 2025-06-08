@@ -10,23 +10,19 @@ export const config = {
         antialias: true,
     },
     scale: {
-        parent: "gameId",
+        parent: "game-id",
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: 1440,
-        height: 1000,
+        height: 1080,
         // min: {
         //     width: 320,
         //     height: 400
         // },
-        // max: {
-        //     width: 1600,
-        //     height: 1600
-        // },
-        zoom: 1.5
+        zoom: 1.0
     },
     scene: [MainScene],
-    backgroundColor: "#00377a",
+    backgroundColor: "#0d52bd",
 };
 
 export const game = new Phaser.Game(config);

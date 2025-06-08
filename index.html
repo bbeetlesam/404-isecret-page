@@ -1,23 +1,27 @@
 <!DOCTYPE html>
-<html lang="in">
+<html lang="en">
     <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Page Not Found | I-Secret</title>
 
         <link rel="icon" type="image/svg+xml" href="/img/icon.svg">
         <link rel="stylesheet" href="/src/css/style.css">
-        <script type="module" src="/src/js/main.js"></script>
+        <script type="module" src="/src/js/main.js" defer></script>
     </head>
 
     <body>
-        <div class="container">
-            <h1 id="h1">FORGET A WORD?</h1>
-            <p style="font-family:'Clear Sans', serif; color:darkslateblue;">
-                Looking for our content? Follow this <a href="https://github.com/bbeetlesam/isecret">link</a> to go to our main page!
+        <div id="page">
+            <h1>MISSED A LETTER?</h1>
+            <p>
+                Looking for our content?
+                Follow this <a href="https://github.com/bbeetlesam/isecret">link</a> to go to our main page!
             </p>
-            
-            <div id="gameId"></div>
+            <img id="showGameBtn" src="/img/play-button-test.jpg" alt="Show Game">
+        </div>
+
+        <div id="game-id">
+            <div class="game-overlay"></div>
         </div>
     </body>
 </html>

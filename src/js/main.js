@@ -2,7 +2,20 @@
 
 import { config, game } from './phaser.js';
 
-window.addEventListener("resize", () => {
-    // game.scale.resize(window.innerWidth, window.innerHeight);
+let isGameShown = false;
+
+window.addEventListener('resize', () => {
     game.scale.refresh();
+});
+
+document.getElementById('showGameBtn').addEventListener('click', () => {
+    isGameShown = true;
+    document.getElementById('game-id').style.display = 'block';
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isGameShown) {
+        isGameShown = false;
+        document.getElementById('game-id').style.display = 'none';
+    }
 });
