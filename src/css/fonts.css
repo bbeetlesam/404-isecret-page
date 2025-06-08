@@ -1,0 +1,10 @@
+/* Custom fonts */
+
+@font-face {
+    font-family: 'Clear Sans';
+    src: url('../../public/font/ClearSans-Bold.woff2') format('woff2'),
+    url('../../public/font/ClearSans-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}

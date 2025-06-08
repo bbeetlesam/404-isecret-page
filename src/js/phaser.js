@@ -3,35 +3,26 @@ import { MainScene } from "./scene.js";
 
 // const isLandscape = window.innerWidth > window.innerHeight;
 
-const config = {
+export const config = {
     type: Phaser.AUTO,
     render: {
         pixelArt: false,
         antialias: true,
     },
     scale: {
-        parent: "gameId",
+        parent: "game-id",
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: 1000,
-        height: 800,
+        width: 1440,
+        height: 1080,
         // min: {
         //     width: 320,
         //     height: 400
         // },
-        // max: {
-        //     width: 1600,
-        //     height: 1600
-        // },
-        zoom: 1.5
+        zoom: 1.0
     },
     scene: [MainScene],
-    backgroundColor: "#00377a",
+    backgroundColor: "#0d52bd",
 };
 
-const game = new Phaser.Game(config);
-
-window.addEventListener("resize", () => {
-    // game.scale.resize(window.innerWidth, window.innerHeight);
-    game.scale.refresh();
-});
+export const game = new Phaser.Game(config);
