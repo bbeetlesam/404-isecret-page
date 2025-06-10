@@ -1,21 +1,22 @@
 // JawaScript main entry
 
 import { config, game } from './phaser.js';
-
-let isGameShown = false;
+import GameState from './gameState.js';
 
 window.addEventListener('resize', () => {
     game.scale.refresh();
 });
 
 document.getElementById('showGameBtn').addEventListener('click', () => {
-    isGameShown = true;
-    document.getElementById('game-id').style.display = 'block';
+    GameState.isShown = true;
 });
 
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && isGameShown) {
-        isGameShown = false;
-        document.getElementById('game-id').style.display = 'none';
+    if (e.key === 'Escape' && GameState.isShown) {
+        GameState.isShown = false;
+        const mainScene = game.scene.getScene('MainScene');
+        if (mainScene && typeof mainScene.quitGame === 'function') {
+            mainScene.quitGame();
+        }
     }
 });

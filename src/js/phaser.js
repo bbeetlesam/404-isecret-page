@@ -3,11 +3,17 @@ import { MainScene } from "./scene.js";
 
 // const isLandscape = window.innerWidth > window.innerHeight;
 
+/** @type {import('phaser').Types.Core.GameConfig} */
 export const config = {
     type: Phaser.AUTO,
-    render: {
-        pixelArt: false,
-        antialias: true,
+    pixelArt: false,
+    antialias: true,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 350 },
+            debug: true
+        }
     },
     scale: {
         parent: "game-id",
@@ -15,10 +21,6 @@ export const config = {
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: 1440,
         height: 1080,
-        // min: {
-        //     width: 320,
-        //     height: 400
-        // },
         zoom: 1.0
     },
     scene: [MainScene],
