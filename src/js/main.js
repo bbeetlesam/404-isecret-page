@@ -7,7 +7,7 @@ window.addEventListener('resize', () => {
     game.scale.refresh();
 });
 
-document.getElementById('showGameBtn').addEventListener('click', () => {
+document.getElementById('showGameButton').addEventListener('click', () => {
     GameState.isShown = true;
 });
 
