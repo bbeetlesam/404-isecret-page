@@ -81,20 +81,17 @@ export class MainScene extends Phaser.Scene {
                 dragRect.destroy();
                 ghostBlocks.forEach(gb => gb.destroy());
                 
-                // Inisialisasi static group kalau belum
                 if (!this.groundBlocks) {
                     this.groundBlocks = this.physics.add.staticGroup();
                 }
                 
-                // Buat block static (ground block)
                 shape.forEach(pos => {
                     const block = this.groundBlocks.create(
                         finalX + pos.x * blockSize,
                         finalY + pos.y * blockSize,
-                        null // pakai null karena rectangle, bukan image
+                        null
                     );
                     
-                    // Ganti visual block-nya biar rectangle tetap tampil
                     const graphics = this.add.rectangle(
                         finalX + pos.x * blockSize,
                         finalY + pos.y * blockSize,
@@ -103,7 +100,6 @@ export class MainScene extends Phaser.Scene {
                     ).setOrigin(0, 0)
                         .setStrokeStyle(2, 0x000000);
                     
-                    // Set ukuran collider manual
                     block.setSize(blockSize, blockSize);
                     block.setOrigin(0, 0);
                     block.setDisplaySize(blockSize, blockSize);
