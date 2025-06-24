@@ -4,7 +4,7 @@ import { game } from './phaser.js';
 import GameState from './gameState.js';
 
 window.addEventListener('resize', () => {
-    game.scale.refresh();
+    // game.scale.refresh();
 });
 
 // Track keydown events
@@ -22,16 +22,22 @@ document.addEventListener('keydown', (e) => {
 
 // Track click events
 document.addEventListener('click', (e) => {
+    const canvas = document.querySelector('#game-id canvas');
+    const gameId = document.getElementById('game-id');
+    
     // Show the canvas if clicked on the button
     if (e.target.id === 'showGameButton') {
         GameState.isShown = true;
+        
+        // Delay to ensure styles are applied before canvas is injected
+        setTimeout(() => {
+            gameId.style.display = 'block';
+        }, 10);
     }
     
     // Close game if click outside canvas while the canvas is shown
-    if (e.target.id === 'game-id') {
-        const canvas = document.querySelector('#game-id canvas');
-        
-        if (!(canvas && canvas.contains(e.target))) {
+    if (GameState.isShown && canvas && !canvas.contains(e.target)) {
+        if (gameId.contains(e.target)) {
             const mainScene = game.scene.getScene('MainScene');
             
             GameState.isShown = false;
