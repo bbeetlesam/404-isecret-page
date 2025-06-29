@@ -108,8 +108,32 @@ export class MainScene extends Phaser.Scene {
                 
                 this.physics.add.collider(this.player, this.groundBlocks);
             }
-        });
-    }
+        }); 
+        
+        //return dragRect;
+
+    } 
+
+    createRandomShapes() {
+        if (!this.shapeUIs) this.shapeUIs = [];
+        this.shapeUIs.forEach(shape => shape.destroy());
+        this.shapeUIs = [];
+      
+        const allShapeKeys = Object.keys(Shapes);
+        const shuffled = Phaser.Utils.Array.Shuffle(allShapeKeys);
+      
+        for (let i = 0; i < 3; i++) {
+          const shapeKey = shuffled[i];
+          const shape = Shapes[shapeKey];
+      
+          const x = 100 + i * 200;
+          const y = 0;
+      
+          const uiShape = this.createShape(x, y, shape);
+          this.shapeUIs.push(uiShape);
+        }
+      } 
+      
     
     createRaycastBetween(pos1, pos2, thickness = 10, onDetect = () => {}) {
         const dx = pos2.x - pos1.x;
@@ -159,10 +183,12 @@ export class MainScene extends Phaser.Scene {
     // Create game objects
     create()
     {
+        
         this.sceneSize = {width: this.scale.width, height: this.scale.height};
         this.grounds = this.physics.add.staticGroup();
         this.cursor = this.input.keyboard.createCursorKeys();
-        
+        //this.createRandomShapes();
+
         this.groundSize = 60;
         this.groundAmount = {x: this.sceneSize.width/this.groundSize, y: this.sceneSize.height/this.groundSize};
         let holeStartPoint = Phaser.Math.Between(this.groundAmount.x / 2, this.groundAmount.x - 7);
@@ -202,8 +228,9 @@ export class MainScene extends Phaser.Scene {
                 ground.refreshBody();
             }
         }
-        
-        this.createRaycastBetween({x: this.sceneSize.width - 50, y: this.groundSize*11}, {x: this.sceneSize.width - 50, y: this.groundSize*13}, 10, (ray, player) => {
+
+        const rayX = 1440;
+        this.createRaycastBetween({x: rayX, y: this.groundSize*11}, {x: rayX, y: this.groundSize*13}, 10, (ray, player) => {
             console.log('Player crossed the ray!');
             GameState.isWin = true;
         });
@@ -213,12 +240,20 @@ export class MainScene extends Phaser.Scene {
         this.player.body.setCircle(this.player.radius, 0, 0);
         this.player.body.setBounce(0.5);
         this.player.body.setCollideWorldBounds(true);
+
+        // Kamera mengikuti player
+        this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+        // Batasi gerakan kamera agar tidak melewati dunia
+        this.cameras.main.setBounds(0, 0, this.sceneSize.width, this.sceneSize.height);
+        this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+        this.cameras.main.setBounds(0, 0, this.sceneSize.width, this.sceneSize.height);
         
         this.physics.add.collider(this.player, this.grounds);
         
         this.createShape(100, 0, Shapes.L);
         this.createShape(300, 0, Shapes.T);
         this.createShape(500, 0, Shapes.S);
+        
     }
 
     // Update game state each frame
@@ -231,18 +266,39 @@ export class MainScene extends Phaser.Scene {
             this.player.body.setVelocityX(
                 Phaser.Math.Clamp(this.player.body.velocity.x + this.movePower, -this.maxVelocityX, this.maxVelocityX)
             );
+            
         }
         else {
             this.player.body.setVelocityX(0);
         }
-        
+
+        if (this.ballIsEntering) {
+            if (this.player.x >= 50) {
+                this.player.body.setVelocity(0, 0);
+                this.player.body.setAllowGravity(true); // aktifkan gravitasi kembali
+                this.ballIsEntering = false;
+                GameState.isRunning = false; // tunggu klik play lagi
+            }
+        }
+
         if (GameState.isWin) {
-            this.player.setPosition(50, this.groundSize * 11);
-            GameState.isRunning = false;
+            const startX = -100;
+            const startY = this.groundSize * 11.55;
+
+            this.player.setPosition(startX, startY);
+            this.player.body.setVelocity(150, 0); // bergerak horizontal
+            this.player.body.setAllowGravity(false); // cegah jatuh dari atas
+
             GameState.addScore(1);
             this.scoreText.setText(`${GameState.score}`);
-            
+
             GameState.isWin = false;
+
+            // Tambahkan flag bahwa bola sedang masuk
+            this.ballIsEntering = true;
+
+           //this.createRandomShapes();
         }
+        
     }
 }
