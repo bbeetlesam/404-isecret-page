@@ -19,6 +19,13 @@
     transform: scale(0.9);
 
     /* canvas outline */
-    border: 6px solid black;
+    border: none;
     border-radius: 8px;
+    transition: opacity 1000ms ease-in;
+    opacity: 0;
+}
+
+#game-id canvas.visible {
+    border: 6px solid black;
+    opacity: 1;
 }

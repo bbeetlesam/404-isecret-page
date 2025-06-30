@@ -29,10 +29,12 @@ document.addEventListener('click', (e) => {
     if (e.target.id === 'showGameButton') {
         GameState.isShown = true;
         
-        // Delay to ensure styles are applied before canvas is injected
-        setTimeout(() => {
-            gameId.style.display = 'block';
-        }, 10);
+        // Delay to ensure styles are applied after canvas is injected
+        requestAnimationFrame(() => {
+            if (canvas) {
+                canvas.classList.add('visible');
+            }
+        });
     }
     
     // Close game if click outside canvas while the canvas is shown
@@ -43,6 +45,10 @@ document.addEventListener('click', (e) => {
             GameState.isShown = false;
             if (mainScene && typeof mainScene.quitGame === 'function') {
                 mainScene.quitGame();
+            }
+            
+            if (canvas) {
+                canvas.classList.remove('visible');
             }
         }
     }
