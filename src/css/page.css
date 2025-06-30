@@ -20,19 +20,19 @@
 }
 
 #page #showGameButton {
-    width: 200px;
-    height: 200px;
+    width: 300px;
+    height: 300px;
     cursor: pointer;
     border-radius: 8px;
     border: 2px solid #000000;
-    object-fit: contain;
+    object-fit: fill;
     display: block;
 }
 
 #page h1 {
     font-weight: bold;
     font-size: 3rem;
-    color: #0098F0;
+    color: #5865F2;
     margin: 0 0 0 0;
 }
 
