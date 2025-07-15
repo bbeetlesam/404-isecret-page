@@ -110,7 +110,7 @@ export class MainScene extends Phaser.Scene {
             }
         }); 
         
-        //return dragRect;
+        return dragRect;
 
     } 
 
@@ -134,7 +134,49 @@ export class MainScene extends Phaser.Scene {
         }
       } 
       
+      triggerGameOver(reason = 'Game Over') {
+        this.isGameOver = true;
+        GameState.isRunning = false;
     
+        const centerX = this.cameras.main.scrollX + this.sceneSize.width / 2;
+        const centerY = this.sceneSize.height / 2;
+    
+        this.gameOverText = this.add.text(centerX, centerY - 50, reason, {
+            fontSize: '64px',
+            fontFamily: 'Clear Sans',
+            color: '#f0635a'
+        }).setOrigin(0.5);
+    
+        this.scoreText = this.add.text(centerX, centerY + 10, `Cina Super: ${GameState.score}`, {
+            fontSize: '40px',
+            fontFamily: 'Clear Sans',
+            color: '#ffffff'
+        }).setOrigin(0.5);
+    
+        this.restartButton = this.add.text(centerX, centerY + 80, 'Main Lagi', {
+            fontSize: '32px',
+            fontFamily: 'Clear Sans',
+            backgroundColor: '#ffffff',
+            color: '#000000',
+            padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    
+        this.restartButton.on('pointerdown', () => {
+            this.restartGame();
+        });
+    }
+    
+    
+    restartGame() {
+        // Reset semua variabel penting
+        GameState.resetStates();
+        GameState.isShown = true;
+        GameState.score = 0;
+    
+        this.scene.restart(); // restart ulang scene dari awal
+    }
+    
+
     createRaycastBetween(pos1, pos2, thickness = 10, onDetect = () => {}) {
         const dx = pos2.x - pos1.x;
         const dy = pos2.y - pos1.y;
@@ -188,6 +230,7 @@ export class MainScene extends Phaser.Scene {
         this.grounds = this.physics.add.staticGroup();
         this.cursor = this.input.keyboard.createCursorKeys();
         //this.createRandomShapes();
+        this.isGameOver = false;
 
         this.groundSize = 60;
         this.groundAmount = {x: this.sceneSize.width/this.groundSize, y: this.sceneSize.height/this.groundSize};
@@ -215,6 +258,7 @@ export class MainScene extends Phaser.Scene {
         
         this.playButton.on('pointerup', () => {
             GameState.isRunning = true;
+            this.levelStartTime = this.time.now;
         });
         
         for (let i = 0; i < this.sceneSize.height/this.groundSize - 12; i++) { // 1080/60 = 18
@@ -253,12 +297,26 @@ export class MainScene extends Phaser.Scene {
         this.createShape(100, 0, Shapes.L);
         this.createShape(300, 0, Shapes.T);
         this.createShape(500, 0, Shapes.S);
+
+        //Limit Waktu Game Over
+        this.levelTimeLimit = 10000; // 10 detik
+        this.isGameOver = false;
+
         
     }
 
     // Update game state each frame
     update(time, delta)
     {
+        if (!this.isGameOver && GameState.isRunning) {
+            const elapsed = this.time.now - this.levelStartTime;
+        
+            if (elapsed >= this.levelTimeLimit) {
+                this.triggerGameOver('Kanjut Badag');
+            }
+        }
+        
+        
         this.showGame(GameState.isShown);
         if (!this.player || !this.player.body) return;
         
@@ -268,6 +326,7 @@ export class MainScene extends Phaser.Scene {
             );
             
         }
+        
         else {
             this.player.body.setVelocityX(0);
         }
@@ -293,11 +352,12 @@ export class MainScene extends Phaser.Scene {
             this.scoreText.setText(`${GameState.score}`);
 
             GameState.isWin = false;
+            this.levelStartTime = this.time.now; // ⏱️ reset waktu saat lanjut level
 
             // Tambahkan flag bahwa bola sedang masuk
             this.ballIsEntering = true;
 
-           //this.createRandomShapes();
+            this.createRandomShapes();
         }
         
     }
