@@ -81,9 +81,10 @@ export class MainScene extends Phaser.Scene {
                 dragRect.destroy();
                 ghostBlocks.forEach(gb => gb.destroy());
                 
-                if (!this.groundBlocks) {
-                    this.groundBlocks = this.physics.add.staticGroup();
-                }
+                //if (!this.groundBlocks) {
+                   // this.groundBlocks = this.physics.add.staticGroup();
+                //}
+                
                 
                 shape.forEach(pos => {
                     const block = this.groundBlocks.create(
@@ -91,19 +92,21 @@ export class MainScene extends Phaser.Scene {
                         finalY + pos.y * blockSize,
                         null
                     );
-                    
+                
+                    block.setSize(blockSize, blockSize);
+                    block.setOrigin(0, 0);
+                    block.setDisplaySize(blockSize, blockSize);
+                    block.refreshBody();
+                
                     const graphics = this.add.rectangle(
                         finalX + pos.x * blockSize,
                         finalY + pos.y * blockSize,
                         blockSize, blockSize,
                         0x00ffff
                     ).setOrigin(0, 0)
-                        .setStrokeStyle(2, 0x000000);
-                    
-                    block.setSize(blockSize, blockSize);
-                    block.setOrigin(0, 0);
-                    block.setDisplaySize(blockSize, blockSize);
-                    block.refreshBody();
+                     .setStrokeStyle(2, 0x000000);
+                
+                    this.groundBlocks.add(graphics);
                 });
                 
                 this.physics.add.collider(this.player, this.groundBlocks);
@@ -228,6 +231,7 @@ export class MainScene extends Phaser.Scene {
         
         this.sceneSize = {width: this.scale.width, height: this.scale.height};
         this.grounds = this.physics.add.staticGroup();
+        this.groundBlocks = this.physics.add.staticGroup();
         this.cursor = this.input.keyboard.createCursorKeys();
         //this.createRandomShapes();
         this.isGameOver = false;
@@ -356,6 +360,10 @@ export class MainScene extends Phaser.Scene {
 
             // Tambahkan flag bahwa bola sedang masuk
             this.ballIsEntering = true;
+
+            if (this.groundBlocks) {
+                this.groundBlocks.clear(true, true); // destroy semua blok dalam grup
+            }
 
             this.createRandomShapes();
         }
