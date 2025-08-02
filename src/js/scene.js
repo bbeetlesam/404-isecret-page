@@ -223,6 +223,10 @@ export class MainScene extends Phaser.Scene {
     {
         this.load.image("ground", "/img/superunknown.jpeg");
         this.load.image("play", "/img/play-button.png");
+        this.load.image("sky", "/img/BG.png");
+        this.load.image("mountain1", "/img/FG 2.png");
+        this.load.image("planet", "/img/PLANET.png");
+        this.load.image("stars", "/img/STARS.png");
     }
     
     // Create game objects
@@ -233,6 +237,7 @@ export class MainScene extends Phaser.Scene {
         this.grounds = this.physics.add.staticGroup();
         this.groundBlocks = this.physics.add.staticGroup();
         this.cursor = this.input.keyboard.createCursorKeys();
+        
         //this.createRandomShapes();
         this.isGameOver = false;
 
@@ -276,6 +281,26 @@ export class MainScene extends Phaser.Scene {
                 ground.refreshBody();
             }
         }
+
+        this.sky = this.add.image(0, 0, 'sky')
+            .setOrigin(0, 0)
+            .setScrollFactor(0)  // Tetap diam saat kamera bergerak
+            .setDepth(-4);       // Layer paling belakang
+
+        this.mountain = this.add.image(0, 0, 'mountain1')
+            .setOrigin(0, 0)
+            .setScrollFactor(0.2) // Sedikit ikut kamera
+            .setDepth(-3);
+
+        this.trees = this.add.image(0, 0, 'planet')
+            .setOrigin(0, 0)
+            .setScrollFactor(0.4) // Lebih dekat, lebih banyak bergerak
+            .setDepth(-1);
+        
+        this.trees = this.add.image(0, -565, 'stars')
+            .setOrigin(0, 0)
+            .setScrollFactor(0.4) 
+            .setDepth(-2);
 
         const rayX = 1440;
         this.createRaycastBetween({x: rayX, y: this.groundSize*11}, {x: rayX, y: this.groundSize*13}, 10, (ray, player) => {
