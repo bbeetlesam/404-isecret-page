@@ -111,7 +111,7 @@ export class MainScene extends Phaser.Scene {
                 
                 this.physics.add.collider(this.player, this.groundBlocks);
             }
-        }); 
+        });  
         
         return dragRect;
 
@@ -135,7 +135,42 @@ export class MainScene extends Phaser.Scene {
           const uiShape = this.createShape(x, y, shape);
           this.shapeUIs.push(uiShape);
         }
-      } 
+      }
+      
+    checkOverlapWithGround(x, y, shape) {
+        const blockSize = this.groundSize;
+        for (const pos of shape) {
+            const bx = x + pos.x * blockSize;
+            const by = y + pos.y * blockSize;
+    
+            // Buat area segi empat blok
+            const bounds1 = new Phaser.Geom.Rectangle(bx, by, blockSize, blockSize);
+    
+            // Cek overlap dengan groundBlocks
+            const overlapping = this.groundBlocks.getChildren().some(child => {
+                const bounds2 = child.getBounds();
+                return Phaser.Geom.Intersects.RectangleToRectangle(bounds1, bounds2);
+            });
+    
+            if (overlapping) {
+                return true; // Terdapat overlap
+            }
+        }
+    
+        // Cek dengan ground statis bawah
+        const overlappingGround = this.grounds.getChildren().some(ground => {
+            const bounds1 = new Phaser.Geom.Rectangle(x + pos.x * blockSize, y + pos.y * blockSize, blockSize, blockSize);
+            const bounds2 = ground.getBounds();
+            return Phaser.Geom.Intersects.RectangleToRectangle(bounds1, bounds2);
+        });
+    
+        if (overlappingGround) {
+            return true;
+        }
+    
+        return false;
+        }
+    
       
       triggerGameOver(reason = 'Game Over') {
         this.isGameOver = true;
@@ -222,11 +257,13 @@ export class MainScene extends Phaser.Scene {
     preload()
     {
         this.load.image("ground", "/img/superunknown.jpeg");
-        this.load.image("play", "/img/play-button.png");
+        this.load.image("play", "/img/PLAY BUTTON.png");
         this.load.image("sky", "/img/BG.png");
         this.load.image("mountain1", "/img/FG 2.png");
         this.load.image("planet", "/img/PLANET.png");
         this.load.image("stars", "/img/STARS.png");
+        this.load.image("mountain2", "/img/FG 1.png");
+        this.load.image("crater", "/img/FG 3.png");
     }
     
     // Create game objects
@@ -261,7 +298,8 @@ export class MainScene extends Phaser.Scene {
             color: '#ffffff',
         });
         
-        this.playButton = this.add.image(this.sceneSize.width - 5, 2, "play").setScale(2.5)
+        this.playButton = this.add.image(this.sceneSize.width - 5, 2, "play")
+            .setScale(0.2)
             .setOrigin(1, 0)
             .setInteractive({ useHandCursor: true })
         
@@ -285,22 +323,35 @@ export class MainScene extends Phaser.Scene {
         this.sky = this.add.image(0, 0, 'sky')
             .setOrigin(0, 0)
             .setScrollFactor(0)  // Tetap diam saat kamera bergerak
+            .setDepth(-6);       // Layer paling belakang
+
+        this.mountain2 = this.add.image(0, 0, 'mountain2')
+            .setOrigin(0, 0)
+            .setScrollFactor(0)  // Tetap diam saat kamera bergerak
+            .setDepth(-5);       // Layer paling belakang
+
+        this.mountain1 = this.add.image(0, 0, 'mountain1')
+            .setOrigin(0, 0)
+            .setScrollFactor(0)  // Tetap diam saat kamera bergerak
             .setDepth(-4);       // Layer paling belakang
 
-        this.mountain = this.add.image(0, 0, 'mountain1')
+        this.crater = this.add.image(0, -20, 'crater')
             .setOrigin(0, 0)
             .setScrollFactor(0.2) // Sedikit ikut kamera
             .setDepth(-3);
+        
+        this.stars = this.add.image(0, 0, 'stars')
+        this.stars.setDisplaySize(1100, 331)
+            .setOrigin(0, 0)
+            .setScrollFactor(0.2) 
+            .setDepth(-2);
 
-        this.trees = this.add.image(0, 0, 'planet')
+        this.planet = this.add.image(0, 0, 'planet')
             .setOrigin(0, 0)
             .setScrollFactor(0.4) // Lebih dekat, lebih banyak bergerak
             .setDepth(-1);
         
-        this.trees = this.add.image(0, -565, 'stars')
-            .setOrigin(0, 0)
-            .setScrollFactor(0.4) 
-            .setDepth(-2);
+        
 
         const rayX = 1440;
         this.createRaycastBetween({x: rayX, y: this.groundSize*11}, {x: rayX, y: this.groundSize*13}, 10, (ray, player) => {
