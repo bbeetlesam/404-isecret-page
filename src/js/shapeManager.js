@@ -1,3 +1,4 @@
+// function to create a draggable shape on the game scene
 export function createShape(scene, x, y, shape) {
     const blockSize = scene.groundSize;
     const ghostBlocks = [];
@@ -25,25 +26,26 @@ export function createShape(scene, x, y, shape) {
         .setInteractive();
     scene.input.setDraggable(dragRect);
     
-    let offsetX = 0, offsetY = 0;
+    let dragOffsetX = 0, dragOffsetY = 0;
     
     scene.input.on('dragstart', (pointer, obj) => {
         if (obj === dragRect) {
-            offsetX = pointer.x - dragRect.x;
-            offsetY = pointer.y - dragRect.y;
+            dragOffsetX = pointer.x - dragRect.x;
+            dragOffsetY = pointer.y - dragRect.y;
         }
     });
     
     scene.input.on('drag', (pointer, obj, dragX, dragY) => {
         if (obj === dragRect) {
-            const snapX = Math.round((dragX - offsetX) / blockSize) * blockSize;
-            const snapY = Math.round((dragY - offsetY) / blockSize) * blockSize;
+            // keep the pointer at the same offset inside the dragRect
+            const newX = pointer.x - dragOffsetX;
+            const newY = pointer.y - dragOffsetY;
             
-            dragRect.setPosition(snapX, snapY);
+            dragRect.setPosition(newX, newY);
             shape.forEach((pos, i) => {
                 ghostBlocks[i].setPosition(
-                    snapX + pos.x * blockSize,
-                    snapY + pos.y * blockSize
+                    newX + pos.x * blockSize,
+                    newY + pos.y * blockSize
                 );
             });
         }
@@ -51,16 +53,25 @@ export function createShape(scene, x, y, shape) {
     
     scene.input.on('dragend', (pointer, obj) => {
         if (obj === dragRect) {
-            const finalX = dragRect.x;
-            const finalY = dragRect.y;
+            // snap to grid on drop
+            const snapX = Math.round(dragRect.x / blockSize) * blockSize;
+            const snapY = Math.round(dragRect.y / blockSize) * blockSize;
+            
+            dragRect.setPosition(snapX, snapY);
+            ghostBlocks.forEach((gb, i) => {
+                gb.setPosition(
+                    snapX + shape[i].x * blockSize,
+                    snapY + shape[i].y * blockSize
+                );
+            });
             
             dragRect.destroy();
             ghostBlocks.forEach(gb => gb.destroy());
             
             shape.forEach(pos => {
                 const block = scene.groundBlocks.create(
-                    finalX + pos.x * blockSize,
-                    finalY + pos.y * blockSize,
+                    snapX + pos.x * blockSize,
+                    snapY + pos.y * blockSize,
                     null
                 );
                 
@@ -70,8 +81,8 @@ export function createShape(scene, x, y, shape) {
                 block.refreshBody();
                 
                 const graphics = scene.add.rectangle(
-                    finalX + pos.x * blockSize,
-                    finalY + pos.y * blockSize,
+                    snapX + pos.x * blockSize,
+                    snapY + pos.y * blockSize,
                     blockSize, blockSize,
                     0x00ffff
                 ).setOrigin(0, 0)
@@ -87,6 +98,7 @@ export function createShape(scene, x, y, shape) {
     return dragRect;
 }
 
+// create 3 random shapes (experimental)
 export function createRandomShapes(scene, Shapes) {
     if (!scene.shapeUIs) scene.shapeUIs = [];
     scene.shapeUIs.forEach(shape => shape.destroy());
