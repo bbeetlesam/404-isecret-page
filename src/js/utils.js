@@ -21,9 +21,5 @@ export function checkOverlapWithGround(scene, x, y, shape) {
         return Phaser.Geom.Intersects.RectangleToRectangle(bounds1, bounds2);
     });
     
-    if (overlappingGround) {
-        return true;
-    }
-    
-    return false;
+    return overlappingGround;
 }
