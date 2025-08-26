@@ -164,11 +164,7 @@ export class MainScene extends Phaser.Scene {
             return Phaser.Geom.Intersects.RectangleToRectangle(bounds1, bounds2);
         });
     
-        if (overlappingGround) {
-            return true;
-        }
-    
-        return false;
+        return overlappingGround;
         }
     
       
