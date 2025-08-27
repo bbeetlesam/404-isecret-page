@@ -117,10 +117,8 @@ export class MainScene extends Phaser.Scene {
         
         this.physics.add.collider(this.player, this.grounds);
         
-        // Use imported shape creation
-        createShape(this, 100, 0, Shapes.L);
-        createShape(this, 300, 0, Shapes.T);
-        createShape(this, 500, 0, Shapes.S);
+        // create 3 random initial stackos
+        createRandomShapes(this, Shapes, this.groundSize * 1.5, 0, 30);
         
         this.levelTimeLimit = 10000; // 10 seconds
         this.isGameOver = false;
@@ -165,15 +163,16 @@ export class MainScene extends Phaser.Scene {
             GameState.addScore(1);
             this.scoreText.setText(`${GameState.score}`);
             
-            GameState.isWin = false;
-            this.levelStartTime = this.time.now;
-            this.ballIsEntering = true;
-            
             if (this.groundBlocks) {
                 this.groundBlocks.clear(true, true);
             }
             
-            createRandomShapes(this, Shapes);
+            // create 3 new random shapes each new round
+            createRandomShapes(this, Shapes, this.groundSize * 1.5, 0, 30);
+            
+            GameState.isWin = false;
+            this.levelStartTime = this.time.now;
+            this.ballIsEntering = true;
         }
     }
 }
