@@ -1,7 +1,7 @@
 // Main Scene
 import GameState from './gameState.js';
 import Shapes from './shapes.js';
-import { createShape, createRandomShapes } from './shapeManager.js';
+import { createShape, createRandomShapes, solidifyStacko } from './shapeManager.js';
 import { createRaycastBetween } from './raycastUtils.js';
 import { triggerGameOver, restartGame } from './gameOverManager.js';
 import { checkOverlapWithGround } from './utils.js';
@@ -65,9 +65,20 @@ export class MainScene extends Phaser.Scene {
             .setOrigin(1, 0)
             .setInteractive({ useHandCursor: true });
         
+        // start the game when the play button is clicked
         this.playButton.on('pointerup', () => {
             GameState.isRunning = true;
             this.levelStartTime = this.time.now;
+            
+            // lock stackos and turn them blue
+            if (this.stackos) {
+                this.stackos.forEach(stacko => {
+                    stacko.dragRect.disableInteractive();
+                    stacko.ghostBlocks.forEach(gb => gb.setFillStyle(0x00ffff)); // turns to blue
+                    solidifyStacko(this, stacko, stacko.shape);
+                });
+                this.stackos = [];
+            }
         });
         
         for (let i = 0; i < this.sceneSize.height / this.groundSize - 12; i++) {

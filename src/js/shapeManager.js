@@ -1,5 +1,7 @@
 // function to create a draggable shape on the game scene
 export function createShape(scene, x, y, shape) {
+    if (!scene.stackos) scene.stackos = [];
+    
     const blockSize = scene.groundSize;
     const ghostBlocks = [];
     
@@ -28,6 +30,8 @@ export function createShape(scene, x, y, shape) {
     
     let dragOffsetX = 0, dragOffsetY = 0;
     
+    scene.stackos.push({ dragRect, ghostBlocks, shape });
+    
     scene.input.on('dragstart', (pointer, obj) => {
         if (obj === dragRect) {
             dragOffsetX = pointer.x - dragRect.x;
@@ -53,7 +57,6 @@ export function createShape(scene, x, y, shape) {
     
     scene.input.on('dragend', (pointer, obj) => {
         if (obj === dragRect) {
-            // snap to grid on drop
             const snapX = Math.round(dragRect.x / blockSize) * blockSize;
             const snapY = Math.round(dragRect.y / blockSize) * blockSize;
             
@@ -65,37 +68,48 @@ export function createShape(scene, x, y, shape) {
                 );
             });
             
-            dragRect.destroy();
-            ghostBlocks.forEach(gb => gb.destroy());
-            
-            shape.forEach(pos => {
-                const block = scene.groundBlocks.create(
-                    snapX + pos.x * blockSize,
-                    snapY + pos.y * blockSize,
-                    null
-                );
-                
-                block.setSize(blockSize, blockSize);
-                block.setOrigin(0, 0);
-                block.setDisplaySize(blockSize, blockSize);
-                block.refreshBody();
-                
-                const graphics = scene.add.rectangle(
-                    snapX + pos.x * blockSize,
-                    snapY + pos.y * blockSize,
-                    blockSize, blockSize,
-                    0x00ffff
-                ).setOrigin(0, 0)
-                    .setStrokeStyle(2, 0x000000);
-                
-                scene.groundBlocks.add(graphics);
-            });
-            
-            scene.physics.add.collider(scene.player, scene.groundBlocks);
+            // Set color back to green (if needed)
+            ghostBlocks.forEach(gb => gb.setFillStyle(0x00ff00));
         }
     });
     
     return dragRect;
+}
+
+// helper to solidify a stacko (call this on play)
+export function solidifyStacko(scene, stacko, shape) {
+    const { dragRect, ghostBlocks } = stacko;
+    const blockSize = scene.groundSize;
+    const snapX = dragRect.x;
+    const snapY = dragRect.y;
+    
+    dragRect.disableInteractive();
+    ghostBlocks.forEach(gb => gb.destroy());
+    dragRect.destroy();
+    
+    shape.forEach(pos => {
+        const block = scene.groundBlocks.create(
+            snapX + pos.x * blockSize,
+            snapY + pos.y * blockSize,
+            null
+        );
+        block.setSize(blockSize, blockSize);
+        block.setOrigin(0, 0);
+        block.setDisplaySize(blockSize, blockSize);
+        block.refreshBody();
+        
+        const graphics = scene.add.rectangle(
+            snapX + pos.x * blockSize,
+            snapY + pos.y * blockSize,
+            blockSize, blockSize,
+            0x00ffff
+        ).setOrigin(0, 0)
+            .setStrokeStyle(2, 0x000000);
+        
+        scene.groundBlocks.add(graphics);
+    });
+    
+    scene.physics.add.collider(scene.player, scene.groundBlocks);
 }
 
 // create 3 random shapes (experimental)
