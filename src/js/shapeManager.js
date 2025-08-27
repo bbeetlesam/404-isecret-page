@@ -112,8 +112,20 @@ export function solidifyStacko(scene, stacko, shape) {
     scene.physics.add.collider(scene.player, scene.groundBlocks);
 }
 
+// get shape dimensions
+function getShapeDimensions(shape, blockSize) {
+    const minX = Math.min(...shape.map(p => p.x));
+    const maxX = Math.max(...shape.map(p => p.x));
+    const minY = Math.min(...shape.map(p => p.y));
+    const maxY = Math.max(...shape.map(p => p.y));
+    return {
+        width: (maxX - minX + 1) * blockSize,
+        height: (maxY - minY + 1) * blockSize
+    };
+}
+
 // create 3 random shapes (experimental)
-export function createRandomShapes(scene, Shapes) {
+export function createRandomShapes(scene, Shapes, startX = 0, startY = 0, gap = 0) {
     if (!scene.shapeUIs) scene.shapeUIs = [];
     scene.shapeUIs.forEach(shape => shape.destroy());
     scene.shapeUIs = [];
@@ -121,14 +133,17 @@ export function createRandomShapes(scene, Shapes) {
     const allShapeKeys = Object.keys(Shapes);
     const shuffled = Phaser.Utils.Array.Shuffle(allShapeKeys);
     
+    let currentX = startX;
+    
     for (let i = 0; i < 3; i++) {
         const shapeKey = shuffled[i];
         const shape = Shapes[shapeKey];
         
-        const x = 100 + i * 200;
-        const y = 0;
+        const { width } = getShapeDimensions(shape, scene.groundSize);
         
-        const uiShape = createShape(scene, x, y, shape);
+        const uiShape = createShape(scene, currentX, startY, shape);
         scene.shapeUIs.push(uiShape);
+        
+        currentX += width + gap;
     }
 }
