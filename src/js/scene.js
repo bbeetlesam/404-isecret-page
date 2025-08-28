@@ -1,10 +1,10 @@
 // Main Scene
 import GameState from './gameState.js';
 import Shapes from './shapes.js';
-import { createShape, createRandomShapes, solidifyStacko } from './shapeManager.js';
+import { createRandomShapesCenter, solidifyStacko } from './shapeManager.js';
 import { createRaycastBetween } from './raycastUtils.js';
 import { triggerGameOver, restartGame } from './gameOverManager.js';
-import { checkOverlapWithGround } from './utils.js';
+// import { checkOverlapWithGround } from './utils.js';
 
 export class MainScene extends Phaser.Scene {
     constructor() {
@@ -37,7 +37,7 @@ export class MainScene extends Phaser.Scene {
         this.sceneSize = { width: this.scale.width, height: this.scale.height };
         this.grounds = this.physics.add.staticGroup();
         this.groundBlocks = this.physics.add.staticGroup();
-        this.cursor = this.input.keyboard.createCursorKeys();
+        // this.cursor = this.input.keyboard.createCursorKeys();
         
         this.isGameOver = false;
         this.groundSize = 60;
@@ -117,8 +117,8 @@ export class MainScene extends Phaser.Scene {
         
         this.physics.add.collider(this.player, this.grounds);
         
-        // create 3 random initial stackos
-        createRandomShapes(this, Shapes, this.groundSize * 1.5, 0, 30);
+        // create random initial stackos
+        createRandomShapesCenter(this, Shapes, 4,this.sceneSize.width / 2, 20, 30);
         
         this.levelTimeLimit = 10000; // 10 seconds
         this.isGameOver = false;
@@ -168,7 +168,7 @@ export class MainScene extends Phaser.Scene {
             }
             
             // create 3 new random shapes each new round
-            createRandomShapes(this, Shapes, this.groundSize * 1.5, 0, 30);
+            createRandomShapesCenter(this, Shapes, 4,this.sceneSize.width / 2, 20, 30);
             
             GameState.isWin = false;
             this.levelStartTime = this.time.now;

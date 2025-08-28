@@ -125,7 +125,7 @@ function getShapeDimensions(shape, blockSize) {
 }
 
 // create 3 random shapes (experimental)
-export function createRandomShapes(scene, Shapes, startX = 0, startY = 0, gap = 0) {
+export function createRandomShapes(scene, Shapes, amount = 3, startX = 0, startY = 0, gap = 0) {
     if (!scene.shapeUIs) scene.shapeUIs = [];
     scene.shapeUIs.forEach(shape => shape.destroy());
     scene.shapeUIs = [];
@@ -135,11 +135,46 @@ export function createRandomShapes(scene, Shapes, startX = 0, startY = 0, gap = 
     
     let currentX = startX;
     
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < amount; i++) {
         const shapeKey = shuffled[i];
         const shape = Shapes[shapeKey];
         
         const { width } = getShapeDimensions(shape, scene.groundSize);
+        
+        const uiShape = createShape(scene, currentX, startY, shape);
+        scene.shapeUIs.push(uiShape);
+        
+        currentX += width + gap;
+    }
+}
+
+export function createRandomShapesCenter(scene, Shapes, amount, centerX = 0, startY = 0, gap = 0) {
+    if (!scene.shapeUIs) scene.shapeUIs = [];
+    scene.shapeUIs.forEach(shape => shape.destroy());
+    scene.shapeUIs = [];
+    
+    const allShapeKeys = Object.keys(Shapes);
+    const shuffled = Phaser.Utils.Array.Shuffle(allShapeKeys);
+    
+    // select amount number of random shapes
+    const chosenShapes = shuffled.slice(0, amount);
+    
+    // count total width
+    let totalWidth = 0;
+    const widths = [];
+    chosenShapes.forEach(key => {
+        const { width } = getShapeDimensions(Shapes[key], scene.groundSize);
+        widths.push(width);
+        totalWidth += width;
+    });
+    totalWidth += gap * (chosenShapes.length - 1);
+    
+    let currentX = centerX - totalWidth / 2;
+    
+    // spawn
+    for (let i = 0; i < chosenShapes.length; i++) {
+        const shape = Shapes[chosenShapes[i]];
+        const width = widths[i];
         
         const uiShape = createShape(scene, currentX, startY, shape);
         scene.shapeUIs.push(uiShape);
