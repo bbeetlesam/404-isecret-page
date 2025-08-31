@@ -3,7 +3,7 @@ import GameState from './gameState.js';
 import Shapes from './shapes.js';
 import { createRandomShapesCenter, solidifyStacko } from './shapeManager.js';
 import { createRaycastBetween } from './raycastUtils.js';
-import { triggerGameOver, restartGame } from './gameOverManager.js';
+import { triggerGameOver /*, restartGame*/ } from './gameOverManager.js';
 // import { checkOverlapWithGround } from './utils.js';
 
 export class MainScene extends Phaser.Scene {
