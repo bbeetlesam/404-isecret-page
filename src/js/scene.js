@@ -24,13 +24,13 @@ export class MainScene extends Phaser.Scene {
     
     preload() {
         this.load.image("ground", "/img/superunknown.jpeg");
-        this.load.image("play", "/img/PLAY BUTTON.png");
+        this.load.image("play", "/img/PLAYBUTTON.png");
         this.load.image("sky", "/img/BG.png");
-        this.load.image("mountain1", "/img/FG 2.png");
+        this.load.image("mountain1", "/img/FG2.png");
         this.load.image("planet", "/img/PLANET.png");
         this.load.image("stars", "/img/STARS.png");
-        this.load.image("mountain2", "/img/FG 1.png");
-        this.load.image("crater", "/img/FG 3.png");
+        this.load.image("mountain2", "/img/FG1.png");
+        this.load.image("crater", "/img/FG3.png");
     }
     
     create() {
