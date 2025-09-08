@@ -22,6 +22,8 @@ export function createShape(scene, x, y, shape) {
     const maxY = Math.max(...shape.map(p => p.y));
     const width = (maxX - minX + 1) * blockSize;
     const height = (maxY - minY + 1) * blockSize;
+    let lastValidX = x;
+    let lastValidY = y;
     
     const dragRect = scene.add.rectangle(x, y, width, height, 0x000000, 0)
         .setOrigin(0, 0)
@@ -39,7 +41,7 @@ export function createShape(scene, x, y, shape) {
         }
     });
     
-    scene.input.on('drag', (pointer, obj, dragX, dragY) => {
+    scene.input.on('drag', (pointer, obj) => {
         if (obj === dragRect) {
             // keep the pointer at the same offset inside the dragRect
             const newX = pointer.x - dragOffsetX;
@@ -60,15 +62,29 @@ export function createShape(scene, x, y, shape) {
             const snapX = Math.round(dragRect.x / blockSize) * blockSize;
             const snapY = Math.round(dragRect.y / blockSize) * blockSize;
             
-            dragRect.setPosition(snapX, snapY);
-            ghostBlocks.forEach((gb, i) => {
-                gb.setPosition(
-                    snapX + shape[i].x * blockSize,
-                    snapY + shape[i].y * blockSize
-                );
-            });
+            if (checkOverlapWithStackos(scene, { dragRect, shape }, snapX, snapY)) {
+                // if overlap put back to last valid position
+                dragRect.setPosition(lastValidX, lastValidY);
+                ghostBlocks.forEach((gb, i) => {
+                    gb.setPosition(
+                        lastValidX + shape[i].x * blockSize,
+                        lastValidY + shape[i].y * blockSize
+                    );
+                });
+            } else {
+                // update to new valid position if not overlap
+                dragRect.setPosition(snapX, snapY);
+                ghostBlocks.forEach((gb, i) => {
+                    gb.setPosition(
+                        snapX + shape[i].x * blockSize,
+                        snapY + shape[i].y * blockSize
+                    );
+                });
+                
+                lastValidX = snapX;
+                lastValidY = snapY;
+            }
             
-            // Set color back to green (if needed)
             ghostBlocks.forEach(gb => gb.setFillStyle(0x00ff00));
         }
     });
@@ -122,6 +138,39 @@ function getShapeDimensions(shape, blockSize) {
         width: (maxX - minX + 1) * blockSize,
         height: (maxY - minY + 1) * blockSize
     };
+}
+
+function checkOverlapWithStackos(scene, currentStacko, snapX, snapY) {
+    const blockSize = scene.groundSize;
+    const { shape } = currentStacko;
+    
+    const myBlocks = shape.map(pos => ({
+        x: snapX + pos.x * blockSize,
+        y: snapY + pos.y * blockSize
+    }));
+    
+    // check with other stackos
+    for (let other of scene.stackos) {
+        if (other === currentStacko) continue;
+        
+        const { dragRect, shape: otherShape } = other;
+        const ox = dragRect.x;
+        const oy = dragRect.y;
+        
+        for (let pos of otherShape) {
+            const bx = ox + pos.x * blockSize;
+            const by = oy + pos.y * blockSize;
+            
+            // compare with the stackos being moved
+            for (let my of myBlocks) {
+                if (my.x === bx && my.y === by) {
+                    return true; // overlap!
+                }
+            }
+        }
+    }
+    
+    return false;
 }
 
 // create 3 random shapes (experimental)
