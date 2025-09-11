@@ -31,6 +31,7 @@ export class MainScene extends Phaser.Scene {
         this.load.image("stars", "/img/STARS.png");
         this.load.image("mountain2", "/img/FG1.png");
         this.load.image("crater", "/img/FG3.png");
+        this.load.image("car", "/img/mobil.png");
     }
     
     create() {
@@ -106,11 +107,35 @@ export class MainScene extends Phaser.Scene {
             GameState.isWin = true;
         });
         
-        this.player = this.add.circle(50, this.groundSize * 11, 50 / 2, 0xffffff);
-        this.physics.add.existing(this.player);
-        this.player.body.setCircle(this.player.radius, 0, 0);
-        this.player.body.setBounce(0.5);
+        // car falling physics
+        this.player = this.physics.add.image(50, this.groundSize * 11, "car");
+        this.player.setScale(0.2);
+        this.player.body.setBounce(0.2);
+        this.player.body.setAllowGravity(true);
         this.player.body.setCollideWorldBounds(true);
+        this.player.setDrag(0.5);
+
+        // Izinkan rotasi manual (Arcade Physics tidak mendukung rotasi fisika otomatis)
+        this.player.setOrigin(0.5, 0.5);
+        this.player.rotationSpeed = 0; // custom property untuk rotasi manual
+
+        this.physics.add.collider(this.player, this.grounds, () => {
+            // Saat menyentuh tanah, hentikan gerakan dan rotasi
+            this.player.body.setVelocity(150, 0);
+            this.player.body.setAngularVelocity(0);
+            this.player.body.setAllowGravity(true);
+            this.player.rotationSpeed = 0;
+            
+        });
+        this.bridgeCollider = this.physics.add.collider(this.player, this.groundBlocks);
+
+        this.blockColliders = [];
+        this.groundBlocks.getChildren().forEach(block => {
+            let c = this.physics.add.collider(this.player, block);
+            this.blockColliders.push({ block, collider: c });
+        });
+
+        
         
         this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
         this.cameras.main.setBounds(0, 0, this.sceneSize.width, this.sceneSize.height);
@@ -132,6 +157,8 @@ export class MainScene extends Phaser.Scene {
             }
         }
         
+
+        
         this.showGame(GameState.isShown);
         if (!this.player || !this.player.body) return;
         
@@ -139,9 +166,17 @@ export class MainScene extends Phaser.Scene {
             this.player.body.setVelocityX(
                 Phaser.Math.Clamp(this.player.body.velocity.x + this.movePower, -this.maxVelocityX, this.maxVelocityX)
             );
+
+            if (this.player.body.velocity.y > 10) {
+                this.player.rotationSpeed = 0.01; // kecepatan rotasi saat jatuh
+            }
+
         } else {
             this.player.body.setVelocityX(0);
+            this.player.rotationSpeed = 0;
         }
+
+        this.player.rotation += this.player.rotationSpeed;
         
         if (this.ballIsEntering) {
             if (this.player.x >= 50) {
@@ -163,6 +198,7 @@ export class MainScene extends Phaser.Scene {
             GameState.addScore(1);
             this.scoreText.setText(`${GameState.score}`);
             
+
             if (this.groundBlocks) {
                 this.groundBlocks.clear(true, true);
             }
@@ -174,5 +210,29 @@ export class MainScene extends Phaser.Scene {
             this.levelStartTime = this.time.now;
             this.ballIsEntering = true;
         }
+        
+        const blockSize = this.groundSize;
+        let hasBlockBelow = false;
+
+        this.blockColliders.forEach(entry => {
+            const block = entry.block;
+            const withinX = Math.abs(block.x - this.player.x) < blockSize * 0.5;
+            const belowY  = block.y >= this.player.y && block.y - this.player.y < blockSize;
+        
+            // aktifkan collider hanya untuk blok di bawah
+            entry.collider.active = withinX && belowY;
+        
+            if (entry.collider.active) {
+                hasBlockBelow = false;
+            }
+        });
+        
+        if (!hasBlockBelow) {
+            // mobil jatuh mulus (kasih rotasi pelan biar kelihatan real)
+            this.player.rotationSpeed = 0.0;
+        } else {
+            this.player.rotationSpeed = 0;
+        }
+        
     }
 }
