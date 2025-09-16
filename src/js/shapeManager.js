@@ -1,5 +1,23 @@
 import { checkOverlapWithGround } from './utils.js';
 
+// helper: pick a valid, preloaded texture key
+function chooseStackoTexture(scene) {
+    const defaults = ['stacko1', 'stacko2', 'stacko3', 'stacko4', 'stacko5'];
+    const pool = Array.isArray(scene.stackoTextures) && scene.stackoTextures.length
+        ? scene.stackoTextures
+        : defaults;
+
+    const validPool = pool
+        .filter(k => typeof k === 'string' && k.length > 0)
+        .filter(k => scene.textures && scene.textures.exists(k));
+
+    if (validPool.length === 0) {
+        console.warn('[Stacko] No valid textures found. Check preload and keys.');
+        return null;
+    }
+    return Phaser.Utils.Array.GetRandom(validPool);
+}
+
 // function to create a draggable shape on the game scene
 export function createShape(scene, x, y, shape) {
     if (!scene.stackos) scene.stackos = [];
@@ -7,20 +25,29 @@ export function createShape(scene, x, y, shape) {
     const blockSize = scene.groundSize;
     const ghostBlocks = [];
     
-    // pick one random texture for this whole stacko
-    const texturePool = scene.stackoTextures || ['stacko1', 'stacko2', 'stacko3', 'stacko4', 'stacko5'];
-    const textureKey = Phaser.Utils.Array.GetRandom(texturePool);
+    // pick one random texture for this whole stacko (validated)
+    const textureKey = chooseStackoTexture(scene);
 
     shape.forEach(pos => {
-        const block = scene.add.image(
-            x + pos.x * blockSize,
-            y + pos.y * blockSize,
-            textureKey
-        )
-        .setOrigin(0, 0)
-        .setDisplaySize(blockSize, blockSize);
-
-        ghostBlocks.push(block);
+        if (textureKey) {
+            const block = scene.add.image(
+                x + pos.x * blockSize,
+                y + pos.y * blockSize,
+                textureKey
+            )
+            .setOrigin(0, 0)
+            .setDisplaySize(blockSize, blockSize);
+            ghostBlocks.push(block);
+        } else {
+            // fallback: rectangle if no textures are valid (preload issue)
+            const block = scene.add.rectangle(
+                x + pos.x * blockSize,
+                y + pos.y * blockSize,
+                blockSize, blockSize,
+                0x00ff00
+            ).setOrigin(0, 0);
+            ghostBlocks.push(block);
+        }
     });
     
     const minX = Math.min(...shape.map(p => p.x));
@@ -52,7 +79,6 @@ export function createShape(scene, x, y, shape) {
     
     scene.input.on('drag', (pointer, obj) => {
         if (obj === dragRect) {
-            // keep the pointer at the same offset inside the dragRect
             const newX = pointer.x - dragOffsetX;
             const newY = pointer.y - dragOffsetY;
             
@@ -75,7 +101,6 @@ export function createShape(scene, x, y, shape) {
             const overlapsStacko = checkOverlapWithStackos(scene, stacko, snapX, snapY);
             
             if (overlapsGround || overlapsStacko) {
-                // if overlap put back to last valid position
                 dragRect.setPosition(lastValidX, lastValidY);
                 ghostBlocks.forEach((gb, i) => {
                     gb.setPosition(
@@ -84,7 +109,6 @@ export function createShape(scene, x, y, shape) {
                     );
                 });
             } else {
-                // update to new valid position if not overlap
                 dragRect.setPosition(snapX, snapY);
                 ghostBlocks.forEach((gb, i) => {
                     gb.setPosition(
@@ -104,11 +128,21 @@ export function createShape(scene, x, y, shape) {
 
 // helper to solidify a stacko (call this on play)
 export function solidifyStacko(scene, stacko, shape) {
-    const { dragRect, ghostBlocks, textureKey } = stacko;
+    const { dragRect, ghostBlocks } = stacko;
+    let { textureKey } = stacko;
     const blockSize = scene.groundSize;
     const snapX = dragRect.x;
     const snapY = dragRect.y;
     
+    // ensure we have a valid texture when solidifying
+    if (!textureKey || !(scene.textures && scene.textures.exists(textureKey))) {
+        textureKey = chooseStackoTexture(scene);
+        if (!textureKey) {
+            console.warn('[Stacko] Solidify fallback: no valid textures; skipping spawn.');
+            return;
+        }
+    }
+
     dragRect.disableInteractive();
     ghostBlocks.forEach(gb => gb.destroy());
     dragRect.destroy();
@@ -123,12 +157,9 @@ export function solidifyStacko(scene, stacko, shape) {
         
         sprite.setOrigin(0, 0);
         sprite.setDisplaySize(blockSize, blockSize);
-        
-        // Keep bodies aligned to the displayed size
         if (sprite.refreshBody) sprite.refreshBody();
     });
     
-    // Ensure player collides with these
     scene.physics.add.collider(scene.player, scene.groundBlocks);
 }
 
@@ -148,13 +179,11 @@ function checkOverlapWithStackos(scene, currentStacko, snapX, snapY) {
     const blockSize = scene.groundSize;
     const { shape } = currentStacko;
     
-    // blocks for the shape being moved/dropped (already snapped)
     const myBlocks = shape.map(pos => ({
         x: snapX + pos.x * blockSize,
         y: snapY + pos.y * blockSize
     }));
     
-    // compare with other stackos, using their snapped positions as well
     for (let other of scene.stackos) {
         if (other === currentStacko) continue;
         
@@ -166,10 +195,9 @@ function checkOverlapWithStackos(scene, currentStacko, snapX, snapY) {
             const bx = ox + pos.x * blockSize;
             const by = oy + pos.y * blockSize;
             
-            // compare with the stacko being moved
             for (let my of myBlocks) {
                 if (my.x === bx && my.y === by) {
-                    return true; // overlap!
+                    return true;
                 }
             }
         }
@@ -210,10 +238,8 @@ export function createRandomShapesCenter(scene, Shapes, amount, centerX = 0, sta
     const allShapeKeys = Object.keys(Shapes);
     const shuffled = Phaser.Utils.Array.Shuffle(allShapeKeys);
     
-    // select amount number of random shapes
     const chosenShapes = shuffled.slice(0, amount);
     
-    // count total width
     let totalWidth = 0;
     const widths = [];
     chosenShapes.forEach(key => {
@@ -225,7 +251,6 @@ export function createRandomShapesCenter(scene, Shapes, amount, centerX = 0, sta
     
     let currentX = centerX - totalWidth / 2;
     
-    // spawn
     for (let i = 0; i < chosenShapes.length; i++) {
         const shape = Shapes[chosenShapes[i]];
         const width = widths[i];
