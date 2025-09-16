@@ -1,3 +1,5 @@
+import { checkOverlapWithGround } from './utils.js';
+
 // function to create a draggable shape on the game scene
 export function createShape(scene, x, y, shape) {
     if (!scene.stackos) scene.stackos = [];
@@ -63,8 +65,11 @@ export function createShape(scene, x, y, shape) {
         if (obj === dragRect) {
             const snapX = Math.round(dragRect.x / blockSize) * blockSize;
             const snapY = Math.round(dragRect.y / blockSize) * blockSize;
+
+            const overlapsGround = checkOverlapWithGround(scene, snapX, snapY, shape);
+            const overlapsStacko = checkOverlapWithStackos(scene, stacko, snapX, snapY);
             
-            if (checkOverlapWithStackos(scene, stacko, snapX, snapY)) {
+            if (overlapsGround || overlapsStacko) {
                 // if overlap put back to last valid position
                 dragRect.setPosition(lastValidX, lastValidY);
                 ghostBlocks.forEach((gb, i) => {
