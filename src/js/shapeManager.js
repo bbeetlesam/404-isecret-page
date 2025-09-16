@@ -32,7 +32,9 @@ export function createShape(scene, x, y, shape) {
     
     let dragOffsetX = 0, dragOffsetY = 0;
     
-    scene.stackos.push({ dragRect, ghostBlocks, shape });
+    // keep a stable reference for this stacko so overlap check can skip itself
+    const stacko = { dragRect, ghostBlocks, shape };
+    scene.stackos.push(stacko);
     
     scene.input.on('dragstart', (pointer, obj) => {
         if (obj === dragRect) {
@@ -62,7 +64,7 @@ export function createShape(scene, x, y, shape) {
             const snapX = Math.round(dragRect.x / blockSize) * blockSize;
             const snapY = Math.round(dragRect.y / blockSize) * blockSize;
             
-            if (checkOverlapWithStackos(scene, { dragRect, shape }, snapX, snapY)) {
+            if (checkOverlapWithStackos(scene, stacko, snapX, snapY)) {
                 // if overlap put back to last valid position
                 dragRect.setPosition(lastValidX, lastValidY);
                 ghostBlocks.forEach((gb, i) => {
@@ -144,24 +146,25 @@ function checkOverlapWithStackos(scene, currentStacko, snapX, snapY) {
     const blockSize = scene.groundSize;
     const { shape } = currentStacko;
     
+    // blocks for the shape being moved/dropped (already snapped)
     const myBlocks = shape.map(pos => ({
         x: snapX + pos.x * blockSize,
         y: snapY + pos.y * blockSize
     }));
     
-    // check with other stackos
+    // compare with other stackos, using their snapped positions as well
     for (let other of scene.stackos) {
         if (other === currentStacko) continue;
         
         const { dragRect, shape: otherShape } = other;
-        const ox = dragRect.x;
-        const oy = dragRect.y;
+        const ox = Math.round(dragRect.x / blockSize) * blockSize;
+        const oy = Math.round(dragRect.y / blockSize) * blockSize;
         
         for (let pos of otherShape) {
             const bx = ox + pos.x * blockSize;
             const by = oy + pos.y * blockSize;
             
-            // compare with the stackos being moved
+            // compare with the stacko being moved
             for (let my of myBlocks) {
                 if (my.x === bx && my.y === by) {
                     return true; // overlap!
