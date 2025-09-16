@@ -79,15 +79,31 @@ export class MainScene extends Phaser.Scene {
         this.playButton.on('pointerup', () => {
             GameState.isRunning = true;
             this.levelStartTime = this.time.now;
-            
-            // lock stackos and turn them blue
+
             if (this.stackos) {
                 this.stackos.forEach(stacko => {
+                    // lock UI
                     stacko.dragRect.disableInteractive();
-                    stacko.ghostBlocks.forEach(gb => gb.setFillStyle(0x00ffff)); // turns to blue
+
+                    // images don't have setFillStyle; tint them instead (fallback if any rects remain)
+                    stacko.ghostBlocks.forEach(gb => {
+                        if (gb.setTint) {
+                            gb.setTint(0x00ffff);
+                        } else if (gb.setFillStyle) {
+                            gb.setFillStyle(0x00ffff);
+                        }
+                    });
+
+                    // make them solid (static physics bodies)
                     solidifyStacko(this, stacko, stacko.shape);
                 });
+
                 this.stackos = [];
+            }
+
+            // ensure collider exists (harmless if already created)
+            if (!this.bridgeCollider) {
+                this.bridgeCollider = this.physics.add.collider(this.player, this.groundBlocks);
             }
         });
         

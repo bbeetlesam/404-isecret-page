@@ -126,41 +126,58 @@ export function createShape(scene, x, y, shape) {
     return dragRect;
 }
 
-// helper to solidify a stacko (call this on play)
 export function solidifyStacko(scene, stacko, shape) {
     const { dragRect, ghostBlocks } = stacko;
     let { textureKey } = stacko;
     const blockSize = scene.groundSize;
     const snapX = dragRect.x;
     const snapY = dragRect.y;
-    
-    // ensure we have a valid texture when solidifying
+
+    // Ensure groundBlocks is a static physics group
+    if (!scene.groundBlocks) {
+        scene.groundBlocks = scene.physics.add.staticGroup();
+    }
+
+    // Ensure we have a valid texture when solidifying
     if (!textureKey || !(scene.textures && scene.textures.exists(textureKey))) {
+        // chooseStackoTexture is defined in this file
         textureKey = chooseStackoTexture(scene);
         if (!textureKey) {
-            console.warn('[Stacko] Solidify fallback: no valid textures; skipping spawn.');
-            return;
+            console.warn('[Stacko] Solidify fallback: no valid textures; using a static body only.');
         }
     }
 
+    // Clean up UI
     dragRect.disableInteractive();
     ghostBlocks.forEach(gb => gb.destroy());
     dragRect.destroy();
-    
-    // Create physics-enabled sprites in the groundBlocks group with the same texture
+
+    // Spawn static physics tiles
     shape.forEach(pos => {
+        // Use the static group to create a static physics sprite
         const sprite = scene.groundBlocks.create(
             snapX + pos.x * blockSize,
             snapY + pos.y * blockSize,
-            textureKey
+            textureKey || undefined // allow default if no texture
         );
-        
+
+        // Align top-left to grid and size body to the cell
         sprite.setOrigin(0, 0);
         sprite.setDisplaySize(blockSize, blockSize);
-        if (sprite.refreshBody) sprite.refreshBody();
+
+        // Ensure the Arcade body matches the visual size and position
+        if (sprite.body && sprite.body.setSize) {
+            sprite.body.setSize(blockSize, blockSize);
+        }
+        if (sprite.refreshBody) {
+            sprite.refreshBody();
+        }
     });
-    
-    scene.physics.add.collider(scene.player, scene.groundBlocks);
+
+    // Add collider once
+    if (!scene.__stackoGroundCollider) {
+        scene.__stackoGroundCollider = scene.physics.add.collider(scene.player, scene.groundBlocks);
+    }
 }
 
 // get shape dimensions
