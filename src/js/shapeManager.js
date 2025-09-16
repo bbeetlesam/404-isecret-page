@@ -7,14 +7,19 @@ export function createShape(scene, x, y, shape) {
     const blockSize = scene.groundSize;
     const ghostBlocks = [];
     
+    // pick one random texture for this whole stacko
+    const texturePool = scene.stackoTextures || ['stacko1', 'stacko2', 'stacko3', 'stacko4', 'stacko5'];
+    const textureKey = Phaser.Utils.Array.GetRandom(texturePool);
+
     shape.forEach(pos => {
-        const block = scene.add.rectangle(
+        const block = scene.add.image(
             x + pos.x * blockSize,
             y + pos.y * blockSize,
-            blockSize, blockSize,
-            0x00ff00
-        ).setOrigin(0, 0)
-            .setStrokeStyle(2, 0x000000);
+            textureKey
+        )
+        .setOrigin(0, 0)
+        .setDisplaySize(blockSize, blockSize);
+
         ghostBlocks.push(block);
     });
     
@@ -35,7 +40,7 @@ export function createShape(scene, x, y, shape) {
     let dragOffsetX = 0, dragOffsetY = 0;
     
     // keep a stable reference for this stacko so overlap check can skip itself
-    const stacko = { dragRect, ghostBlocks, shape };
+    const stacko = { dragRect, ghostBlocks, shape, textureKey };
     scene.stackos.push(stacko);
     
     scene.input.on('dragstart', (pointer, obj) => {
@@ -91,8 +96,6 @@ export function createShape(scene, x, y, shape) {
                 lastValidX = snapX;
                 lastValidY = snapY;
             }
-            
-            ghostBlocks.forEach(gb => gb.setFillStyle(0x00ff00));
         }
     });
     
@@ -101,7 +104,7 @@ export function createShape(scene, x, y, shape) {
 
 // helper to solidify a stacko (call this on play)
 export function solidifyStacko(scene, stacko, shape) {
-    const { dragRect, ghostBlocks } = stacko;
+    const { dragRect, ghostBlocks, textureKey } = stacko;
     const blockSize = scene.groundSize;
     const snapX = dragRect.x;
     const snapY = dragRect.y;
@@ -110,28 +113,22 @@ export function solidifyStacko(scene, stacko, shape) {
     ghostBlocks.forEach(gb => gb.destroy());
     dragRect.destroy();
     
+    // Create physics-enabled sprites in the groundBlocks group with the same texture
     shape.forEach(pos => {
-        const block = scene.groundBlocks.create(
+        const sprite = scene.groundBlocks.create(
             snapX + pos.x * blockSize,
             snapY + pos.y * blockSize,
-            null
+            textureKey
         );
-        block.setSize(blockSize, blockSize);
-        block.setOrigin(0, 0);
-        block.setDisplaySize(blockSize, blockSize);
-        block.refreshBody();
         
-        const graphics = scene.add.rectangle(
-            snapX + pos.x * blockSize,
-            snapY + pos.y * blockSize,
-            blockSize, blockSize,
-            0x00ffff
-        ).setOrigin(0, 0)
-            .setStrokeStyle(2, 0x000000);
+        sprite.setOrigin(0, 0);
+        sprite.setDisplaySize(blockSize, blockSize);
         
-        scene.groundBlocks.add(graphics);
+        // Keep bodies aligned to the displayed size
+        if (sprite.refreshBody) sprite.refreshBody();
     });
     
+    // Ensure player collides with these
     scene.physics.add.collider(scene.player, scene.groundBlocks);
 }
 

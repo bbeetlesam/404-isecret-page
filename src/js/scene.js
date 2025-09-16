@@ -32,6 +32,15 @@ export class MainScene extends Phaser.Scene {
         this.load.image("mountain2", "/img/FG1.png");
         this.load.image("crater", "/img/FG3.png");
         this.load.image("car", "/img/mobil.png");
+        
+        // list of stacko textures
+        this.load.image('stacko1', '/img/block-1.png');
+        this.load.image('stacko2', '/img/block-2.png');
+        this.load.image('stacko3', '/img/block-3.png');
+        this.load.image('stacko4', '/img/block-4.png');
+        this.load.image('stacko5', '/img/block-5.png');
+        this.stackoTextures = ['stacko1', 'stacko2', 'stacko3', 'stacko4', 'stacko5'];
+        
     }
     
     create() {
