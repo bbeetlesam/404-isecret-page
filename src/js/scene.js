@@ -33,14 +33,16 @@ export class MainScene extends Phaser.Scene {
         this.load.image("crater", "/img/FG3.png");
         this.load.image("car", "/img/mobil.png");
         
-        // list of stacko textures
+        // base ground cover texture
+        this.load.image("baseGround", "/img/base-ground.png");
+
+        // stacko textures
         this.load.image('stacko1', '/img/block-1.png');
         this.load.image('stacko2', '/img/block-2.png');
         this.load.image('stacko3', '/img/block-3.png');
         this.load.image('stacko4', '/img/block-4.png');
         this.load.image('stacko5', '/img/block-5.png');
         this.stackoTextures = ['stacko1', 'stacko2', 'stacko3', 'stacko4', 'stacko5'];
-        
     }
     
     create() {
@@ -118,6 +120,15 @@ export class MainScene extends Phaser.Scene {
                 ground.refreshBody();
             }
         }
+        // hide the per-tile ground visuals (keep static bodies for physics)
+        this.grounds.getChildren().forEach(g => g.setVisible(false));
+        
+        // draw one stretched base ground image to cover the whole ground area
+        const groundPosY = this.sceneSize.height - this.groundSize * 6;
+        this.baseGround = this.add.image(0, groundPosY, 'baseGround')
+            .setOrigin(0, 0)
+            .setDisplaySize(this.sceneSize.width, this.groundSize * 6)
+            .setDepth(-0.5);
         
         this.sky = this.add.image(0, 0, 'sky').setOrigin(0, 0).setScrollFactor(0).setDepth(-6);
         this.mountain2 = this.add.image(0, 0, 'mountain2').setOrigin(0, 0).setScrollFactor(0).setDepth(-5);
