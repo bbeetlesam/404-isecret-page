@@ -159,8 +159,6 @@ export class MainScene extends Phaser.Scene {
             let c = this.physics.add.collider(this.player, block);
             this.blockColliders.push({ block, collider: c });
         });
-
-        
         
         this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
         this.cameras.main.setBounds(0, 0, this.sceneSize.width, this.sceneSize.height);
@@ -175,89 +173,98 @@ export class MainScene extends Phaser.Scene {
     }
     
     update(time, delta) {
-        if (!this.isGameOver && GameState.isRunning) {
-            const elapsed = this.time.now - this.levelStartTime;
-            if (elapsed >= this.levelTimeLimit) {
-                triggerGameOver(this, 'Kanjut Badag');
-            }
+    if (!this.isGameOver && GameState.isRunning) {
+        const elapsed = this.time.now - this.levelStartTime;
+        if (elapsed >= this.levelTimeLimit) {
+            triggerGameOver(this, 'Kanjut Badag');
         }
-        
-
-        
-        this.showGame(GameState.isShown);
-        if (!this.player || !this.player.body) return;
-        
-        if (GameState.isRunning) {
-            this.player.body.setVelocityX(
-                Phaser.Math.Clamp(this.player.body.velocity.x + this.movePower, -this.maxVelocityX, this.maxVelocityX)
-            );
-
-            if (this.player.body.velocity.y > 10) {
-                this.player.rotationSpeed = 0.01; // kecepatan rotasi saat jatuh
-            }
-
-        } else {
-            this.player.body.setVelocityX(0);
-            this.player.rotationSpeed = 0;
-        }
-
-        this.player.rotation += this.player.rotationSpeed;
-        
-        if (this.ballIsEntering) {
-            if (this.player.x >= 50) {
-                this.player.body.setVelocity(0, 0);
-                this.player.body.setAllowGravity(true);
-                this.ballIsEntering = false;
-                GameState.isRunning = false;
-            }
-        }
-        
-        if (GameState.isWin) {
-            const startX = -100;
-            const startY = this.groundSize * 11.55;
-            
-            this.player.setPosition(startX, startY);
-            this.player.body.setVelocity(150, 0);
-            this.player.body.setAllowGravity(false);
-            
-            GameState.addScore(1);
-            this.scoreText.setText(`${GameState.score}`);
-            
-
-            if (this.groundBlocks) {
-                this.groundBlocks.clear(true, true);
-            }
-            
-            // create 3 new random shapes each new round
-            createRandomShapesCenter(this, Shapes, 4,this.sceneSize.width / 2, 20, 30);
-            
-            GameState.isWin = false;
-            this.levelStartTime = this.time.now;
-            this.ballIsEntering = true;
-        }
-        
-        const blockSize = this.groundSize;
-        let hasBlockBelow = false;
-
-        this.blockColliders.forEach(entry => {
-            const block = entry.block;
-            const withinX = Math.abs(block.x - this.player.x) < blockSize * 0.5;
-            const belowY  = block.y >= this.player.y && block.y - this.player.y < blockSize;
-        
-            // aktifkan collider hanya untuk blok di bawah
-            entry.collider.active = withinX && belowY;
-        
-            if (entry.collider.active) {
-                hasBlockBelow = false;
-            }
-        });
-        
-        if (!hasBlockBelow) {
-            // mobil jatuh mulus (kasih rotasi pelan biar kelihatan real)
-            this.player.rotationSpeed = 0.0;
-        } else {
-            this.player.rotationSpeed = 0;
-        }
-        
     }
+
+    this.showGame(GameState.isShown);
+    if (!this.player || !this.player.body) return;
+
+    if (GameState.isRunning) {
+        this.player.body.setVelocityX(
+            Phaser.Math.Clamp(this.player.body.velocity.x + this.movePower, -this.maxVelocityX, this.maxVelocityX)
+        );
+
+        if (this.player.body.velocity.y > 10) {
+            this.player.rotationSpeed = 0.01; // rotasi pelan saat jatuh
+        }
+
+        // WIN CONDITION: only based on car position reaching the right edge
+        const right = this.player.getBounds().right;
+        const screenRight = this.sceneSize.width;
+        if (right >= screenRight - 1) {
+            GameState.isWin = true;
+        }
+    } else {
+        this.player.body.setVelocityX(0);
+        this.player.rotationSpeed = 0;
+    }
+
+    this.player.rotation += this.player.rotationSpeed;
+
+    if (this.ballIsEntering) {
+        if (this.player.x >= 50) {
+            this.player.body.setVelocity(0, 0);
+            this.player.body.setAllowGravity(true);
+            this.ballIsEntering = false;
+            GameState.isRunning = false;
+        }
+    }
+
+    if (GameState.isWin) {
+        const startX = -100;
+        const startY = this.groundSize * 11.55;
+
+        // reset player to left and glide in
+        this.player.setPosition(startX, startY);
+        this.player.body.setVelocity(150, 0);
+        this.player.body.setAllowGravity(false);
+
+        // score +1
+        GameState.addScore(1);
+        this.scoreText.setText(`${GameState.score}`);
+
+        // remove solidified blocks
+        if (this.groundBlocks) {
+            this.groundBlocks.clear(true, true);
+        }
+
+        // IMPORTANT: reset stacko tracking BEFORE creating new ones,
+        // so newly created shapes repopulate this.stackos and can be solidified on next Play.
+        this.stackos = [];
+
+        // spawn 4 fresh random stackos for the next round
+        createRandomShapesCenter(this, Shapes, 4, this.sceneSize.width / 2, 20, 30);
+
+        // prepare next round
+        GameState.isWin = false;
+        this.levelStartTime = this.time.now;
+        this.ballIsEntering = true;
+    }
+
+    // optional per-block collider toggling (kept as-is, but ensure flags are set correctly)
+    const blockSize = this.groundSize;
+    let hasBlockBelow = false;
+
+    this.blockColliders.forEach(entry => {
+        const block = entry.block;
+        const withinX = Math.abs(block.x - this.player.x) < blockSize * 0.5;
+        const belowY  = block.y >= this.player.y && block.y - this.player.y < blockSize;
+
+        entry.collider.active = withinX && belowY;
+
+        if (entry.collider.active) {
+            hasBlockBelow = false;
+        }
+    });
+
+    if (!hasBlockBelow) {
+        this.player.rotationSpeed = 0.0;
+    } else {
+        this.player.rotationSpeed = 0;
+    }
+}
 }
