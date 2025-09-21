@@ -4,6 +4,7 @@ import Shapes from './shapes.js';
 import { createRandomShapesCenter, solidifyStacko } from './shapeManager.js';
 import { createRaycastBetween } from './raycastUtils.js';
 import { triggerGameOver /*, restartGame*/ } from './gameOverManager.js';
+import { drawHoleOutlines } from "./utils.js";
 // import { checkOverlapWithGround } from './utils.js';
 
 export class MainScene extends Phaser.Scene {
@@ -129,6 +130,12 @@ export class MainScene extends Phaser.Scene {
             .setOrigin(0, 0)
             .setDisplaySize(this.sceneSize.width, this.groundSize * 6)
             .setDepth(-0.5);
+        
+        const totalRows = Math.floor(this.sceneSize.height / this.groundSize);
+        const groundTopRow = totalRows - 6; // equals 12 when totalRows is 18
+        
+        // draw dashed outline on the hole
+        drawHoleOutlines(this, this.holePositions, groundTopRow, this.groundSize);
         
         this.sky = this.add.image(0, 0, 'sky').setOrigin(0, 0).setScrollFactor(0).setDepth(-6);
         this.mountain2 = this.add.image(0, 0, 'mountain2').setOrigin(0, 0).setScrollFactor(0).setDepth(-5);
