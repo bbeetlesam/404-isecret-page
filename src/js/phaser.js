@@ -6,13 +6,12 @@ import { MainScene } from "./scene.js";
 /** @type {import('phaser').Types.Core.GameConfig} */
 export const config = {
     type: Phaser.AUTO,
-    pixelArt: false,
-    antialias: true,
+    pixelArt: true,
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 350 },
-            debug: true
+            gravity: { y: 750 },
+            debug: 1
         }
     },
     scale: {
