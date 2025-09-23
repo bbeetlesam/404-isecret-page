@@ -25,7 +25,7 @@ export class MainScene extends Phaser.Scene {
     
     preload() {
         this.load.image("ground", "/img/superunknown.jpeg");
-        this.load.image("play", "/img/PLAYBUTTON.png");
+        this.load.image("play", "/img/play-button.png");
         this.load.image("sky", "/img/BG.png");
         this.load.image("mountain1", "/img/FG2.png");
         this.load.image("planet", "/img/PLANET.png");
@@ -67,14 +67,14 @@ export class MainScene extends Phaser.Scene {
         this.maxVelocityX = 200;
         this.movePower = 7;
         
-        this.scoreText = this.add.text(10, -5, `${GameState.score}`, {
-            fontSize: '85px',
-            fontFamily: 'Clear Sans',
-            color: '#ffffff',
-        });
+        // score text
+        this.scoreText = this.add.text(this.sceneSize.width - 110, 5, `${GameState.score}`, {
+            fontSize: '85px', fontFamily: 'Clear Sans', color: '#ffffff',
+        }).setOrigin(1, 0);
         
-        this.playButton = this.add.image(this.sceneSize.width - 5, 2, "play")
-            .setScale(0.2)
+        // play button
+        this.playButton = this.add.image(this.sceneSize.width - 15, 15, "play")
+            .setScale(75/256)
             .setOrigin(1, 0)
             .setInteractive({ useHandCursor: true });
         
