@@ -133,7 +133,6 @@ export class MainScene extends Phaser.Scene {
         
         const totalRows = Math.floor(this.sceneSize.height / this.groundSize);
         const groundTopRow = totalRows - 6; // equals 12 when totalRows is 18
-        
         // draw dashed outline on the hole
         drawHoleOutlines(this, this.holePositions, groundTopRow, this.groundSize);
         
@@ -188,6 +187,42 @@ export class MainScene extends Phaser.Scene {
         
         this.levelTimeLimit = 10000; // 10 seconds
         this.isGameOver = false;
+    }
+
+    rebuildGroundAndHole() {
+        // clear existing ground
+        this.grounds.clear(true, true);
+
+        // generate a new random hole position
+        const holeStartPoint = Phaser.Math.Between(this.groundAmount.x / 2, this.groundAmount.x - 7);
+        this.holePositions = [];
+        for (let dx = 0; dx < 6; dx++) {
+            for (let dy = 0; dy < 3; dy++) {
+                this.holePositions.push({ x: holeStartPoint + dx, y: dy });
+            }
+        }
+
+        // rebuild the ground
+        for (let i = 0; i < this.sceneSize.height / this.groundSize - 12; i++) {
+            for (let j = 0; j < this.sceneSize.width / this.groundSize; j++) {
+                const isHole = this.holePositions.some(hole => hole.x === j && hole.y === i);
+                if (isHole) continue;
+
+                const ground = this.grounds.create(j * this.groundSize, this.groundSize * (12 + i), 'ground');
+                ground.setDisplaySize(this.groundSize, this.groundSize);
+                ground.setOrigin(0, 0);
+                ground.refreshBody();
+            }
+        }
+
+        // hide the per-tile ground visuals (keep static bodies for physics)
+        this.grounds.getChildren().forEach(g => g.setVisible(false));
+
+        const totalRows = Math.floor(this.sceneSize.height / this.groundSize);
+        const groundTopRow = totalRows - 6; // equals 12 when totalRows is 18
+
+        // Redraw the hole outlines
+        drawHoleOutlines(this, this.holePositions, groundTopRow, this.groundSize);
     }
     
     update(time, delta) {
@@ -249,6 +284,9 @@ export class MainScene extends Phaser.Scene {
         if (this.groundBlocks) {
             this.groundBlocks.clear(true, true);
         }
+
+        // regenerate hole position, ground bodies, and outline for the next round
+        this.rebuildGroundAndHole();
 
         // IMPORTANT: reset stacko tracking BEFORE creating new ones,
         // so newly created shapes repopulate this.stackos and can be solidified on next Play.
