@@ -1,326 +1,41 @@
 // Main Scene
+import { preloadMain } from './scenePreload.js';
+import { createMain } from './sceneCreate.js';
+import { updateMain } from './sceneUpdate.js';
 import GameState from './gameState.js';
-import Shapes from './shapes.js';
-import { createRandomShapesCenter, solidifyStacko } from './shapeManager.js';
-import { createRaycastBetween } from './raycastUtils.js';
-import { triggerGameOver /*, restartGame*/ } from './gameOverManager.js';
-import { drawHoleOutlines } from "./utils.js";
-// import { checkOverlapWithGround } from './utils.js';
+import { rebuildGroundAndHole } from './groundBuilder.js';
 
 export class MainScene extends Phaser.Scene {
     constructor() {
         super("MainScene");
         console.log("MainScene created");
     }
-    
+
     quitGame() {
         GameState.isShown = false;
         GameState.resetStates();
-        this.player.setPosition(50, this.groundSize * 11);
+        if (this.player && this.groundSize) this.player.setPosition(50, this.groundSize * 11);
     }
-    
+
     showGame(bool) {
-        document.getElementById('game-id').style.display = bool ? 'block' : 'none';
+        const el = document.getElementById('game-id');
+        if (el) el.style.display = bool ? 'block' : 'none';
     }
-    
+
     preload() {
-        this.load.image("ground", "/img/superunknown.jpeg");
-        this.load.image("play", "/img/play-button.png");
-        this.load.image("sky", "/img/BG.png");
-        this.load.image("mountain1", "/img/FG2.png");
-        this.load.image("planet", "/img/PLANET.png");
-        this.load.image("stars", "/img/STARS.png");
-        this.load.image("mountain2", "/img/FG1.png");
-        this.load.image("crater", "/img/FG3.png");
-        this.load.image("car", "/img/mobil.png");
-        
-        // base ground cover texture
-        this.load.image("baseGround", "/img/base-ground.png");
-
-        // stacko textures
-        this.load.image('stacko1', '/img/block-1.png');
-        this.load.image('stacko2', '/img/block-2.png');
-        this.load.image('stacko3', '/img/block-3.png');
-        this.load.image('stacko4', '/img/block-4.png');
-        this.load.image('stacko5', '/img/block-5.png');
-        this.stackoTextures = ['stacko1', 'stacko2', 'stacko3', 'stacko4', 'stacko5'];
+        preloadMain(this);
     }
-    
+
     create() {
-        this.sceneSize = { width: this.scale.width, height: this.scale.height };
-        this.grounds = this.physics.add.staticGroup();
-        this.groundBlocks = this.physics.add.staticGroup();
-        // this.cursor = this.input.keyboard.createCursorKeys();
-        
-        this.isGameOver = false;
-        this.groundSize = 60;
-        this.groundAmount = { x: this.sceneSize.width / this.groundSize, y: this.sceneSize.height / this.groundSize };
-        let holeStartPoint = Phaser.Math.Between(this.groundAmount.x / 2, this.groundAmount.x - 7);
-        
-        this.holePositions = [];
-        for (let dx = 0; dx < 6; dx++) {
-            for (let dy = 0; dy < 3; dy++) {
-                this.holePositions.push({ x: holeStartPoint + dx, y: dy });
-            }
-        }
-        
-        this.maxVelocityX = 200;
-        this.movePower = 7;
-        
-        // score text
-        this.scoreText = this.add.text(this.sceneSize.width - 110, 5, `${GameState.score}`, {
-            fontSize: '85px', fontFamily: 'Clear Sans', color: '#ffffff',
-        }).setOrigin(1, 0);
-        
-        // play button
-        this.playButton = this.add.image(this.sceneSize.width - 15, 15, "play")
-            .setScale(75/256)
-            .setOrigin(1, 0)
-            .setInteractive({ useHandCursor: true });
-        
-        // start the game when the play button is clicked
-        this.playButton.on('pointerup', () => {
-            GameState.isRunning = true;
-            this.levelStartTime = this.time.now;
-
-            if (this.stackos) {
-                this.stackos.forEach(stacko => {
-                    // lock UI
-                    stacko.dragRect.disableInteractive();
-
-                    // images don't have setFillStyle; tint them instead (fallback if any rects remain)
-                    stacko.ghostBlocks.forEach(gb => {
-                        if (gb.setTint) {
-                            gb.setTint(0x00ffff);
-                        } else if (gb.setFillStyle) {
-                            gb.setFillStyle(0x00ffff);
-                        }
-                    });
-
-                    // make them solid (static physics bodies)
-                    solidifyStacko(this, stacko, stacko.shape);
-                });
-
-                this.stackos = [];
-            }
-
-            // ensure collider exists (harmless if already created)
-            if (!this.bridgeCollider) {
-                this.bridgeCollider = this.physics.add.collider(this.player, this.groundBlocks);
-            }
-        });
-        
-        for (let i = 0; i < this.sceneSize.height / this.groundSize - 12; i++) {
-            for (let j = 0; j < this.sceneSize.width / this.groundSize; j++) {
-                const isHole = this.holePositions.some(hole => hole.x === j && hole.y === i);
-                if (isHole) continue;
-                
-                const ground = this.grounds.create(j * this.groundSize, this.groundSize * (12 + i), 'ground');
-                ground.setDisplaySize(this.groundSize, this.groundSize);
-                ground.setOrigin(0, 0);
-                ground.refreshBody();
-            }
-        }
-        // hide the per-tile ground visuals (keep static bodies for physics)
-        this.grounds.getChildren().forEach(g => g.setVisible(false));
-        
-        // draw one stretched base ground image to cover the whole ground area
-        const groundPosY = this.sceneSize.height - this.groundSize * 6;
-        this.baseGround = this.add.image(0, groundPosY, 'baseGround')
-            .setOrigin(0, 0)
-            .setDisplaySize(this.sceneSize.width, this.groundSize * 6)
-            .setDepth(-0.5);
-        
-        const totalRows = Math.floor(this.sceneSize.height / this.groundSize);
-        const groundTopRow = totalRows - 6; // equals 12 when totalRows is 18
-        // draw dashed outline on the hole
-        drawHoleOutlines(this, this.holePositions, groundTopRow, this.groundSize);
-        
-        this.sky = this.add.image(0, 0, 'sky').setOrigin(0, 0).setScrollFactor(0).setDepth(-6);
-        this.mountain2 = this.add.image(0, 0, 'mountain2').setOrigin(0, 0).setScrollFactor(0).setDepth(-5);
-        this.mountain1 = this.add.image(0, 0, 'mountain1').setOrigin(0, 0).setScrollFactor(0).setDepth(-4);
-        this.crater = this.add.image(0, -20, 'crater').setOrigin(0, 0).setScrollFactor(0.2).setDepth(-3);
-        this.stars = this.add.image(0, 0, 'stars').setDisplaySize(1100, 331).setOrigin(0, 0).setScrollFactor(0.2).setDepth(-2);
-        this.planet = this.add.image(0, 0, 'planet').setOrigin(0, 0).setScrollFactor(0.4).setDepth(-1);
-        
-        const rayX = 1440;
-        createRaycastBetween(this, { x: rayX, y: this.groundSize * 11 }, { x: rayX, y: this.groundSize * 13 }, 10, (ray, player) => {
-            console.log('Player crossed the ray!');
-            GameState.isWin = true;
-        });
-        
-        // car falling physics
-        this.player = this.physics.add.image(50, this.groundSize * 11, "car");
-        this.player.setScale(0.2);
-        this.player.body.setBounce(0.2);
-        this.player.body.setAllowGravity(true);
-        this.player.body.setCollideWorldBounds(true);
-        this.player.setDrag(0.5);
-
-        // Izinkan rotasi manual (Arcade Physics tidak mendukung rotasi fisika otomatis)
-        this.player.setOrigin(0.5, 0.5);
-        this.player.rotationSpeed = 0; // custom property untuk rotasi manual
-
-        this.physics.add.collider(this.player, this.grounds, () => {
-            // Saat menyentuh tanah, hentikan gerakan dan rotasi
-            this.player.body.setVelocity(150, 0);
-            this.player.body.setAngularVelocity(0);
-            this.player.body.setAllowGravity(true);
-            this.player.rotationSpeed = 0;
-            
-        });
-        this.bridgeCollider = this.physics.add.collider(this.player, this.groundBlocks);
-
-        this.blockColliders = [];
-        this.groundBlocks.getChildren().forEach(block => {
-            let c = this.physics.add.collider(this.player, block);
-            this.blockColliders.push({ block, collider: c });
-        });
-        
-        this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
-        this.cameras.main.setBounds(0, 0, this.sceneSize.width, this.sceneSize.height);
-        
-        this.physics.add.collider(this.player, this.grounds);
-        
-        // create random initial stackos
-        createRandomShapesCenter(this, Shapes, 4,this.sceneSize.width / 2, 20, 30);
-        
-        this.levelTimeLimit = 10000; // 10 seconds
-        this.isGameOver = false;
+        createMain(this);
     }
 
-    rebuildGroundAndHole() {
-        // clear existing ground
-        this.grounds.clear(true, true);
-
-        // generate a new random hole position
-        const holeStartPoint = Phaser.Math.Between(this.groundAmount.x / 2, this.groundAmount.x - 7);
-        this.holePositions = [];
-        for (let dx = 0; dx < 6; dx++) {
-            for (let dy = 0; dy < 3; dy++) {
-                this.holePositions.push({ x: holeStartPoint + dx, y: dy });
-            }
-        }
-
-        // rebuild the ground
-        for (let i = 0; i < this.sceneSize.height / this.groundSize - 12; i++) {
-            for (let j = 0; j < this.sceneSize.width / this.groundSize; j++) {
-                const isHole = this.holePositions.some(hole => hole.x === j && hole.y === i);
-                if (isHole) continue;
-
-                const ground = this.grounds.create(j * this.groundSize, this.groundSize * (12 + i), 'ground');
-                ground.setDisplaySize(this.groundSize, this.groundSize);
-                ground.setOrigin(0, 0);
-                ground.refreshBody();
-            }
-        }
-
-        // hide the per-tile ground visuals (keep static bodies for physics)
-        this.grounds.getChildren().forEach(g => g.setVisible(false));
-
-        const totalRows = Math.floor(this.sceneSize.height / this.groundSize);
-        const groundTopRow = totalRows - 6; // equals 12 when totalRows is 18
-
-        // Redraw the hole outlines
-        drawHoleOutlines(this, this.holePositions, groundTopRow, this.groundSize);
-    }
-    
     update(time, delta) {
-    if (!this.isGameOver && GameState.isRunning) {
-        const elapsed = this.time.now - this.levelStartTime;
-        if (elapsed >= this.levelTimeLimit) {
-            triggerGameOver(this, 'Kanjut Badag');
-        }
+        updateMain(this, time, delta);
     }
 
-    this.showGame(GameState.isShown);
-    if (!this.player || !this.player.body) return;
-
-    if (GameState.isRunning) {
-        this.player.body.setVelocityX(
-            Phaser.Math.Clamp(this.player.body.velocity.x + this.movePower, -this.maxVelocityX, this.maxVelocityX)
-        );
-
-        if (this.player.body.velocity.y > 10) {
-            this.player.rotationSpeed = 0.01; // rotasi pelan saat jatuh
-        }
-
-        // WIN CONDITION: only based on car position reaching the right edge
-        const right = this.player.getBounds().right;
-        const screenRight = this.sceneSize.width;
-        if (right >= screenRight - 1) {
-            GameState.isWin = true;
-        }
-    } else {
-        this.player.body.setVelocityX(0);
-        this.player.rotationSpeed = 0;
+    // keep compatibility for other modules that expected this method on the scene
+    rebuildGroundAndHole() {
+        rebuildGroundAndHole(this);
     }
-
-    this.player.rotation += this.player.rotationSpeed;
-
-    if (this.ballIsEntering) {
-        if (this.player.x >= 50) {
-            this.player.body.setVelocity(0, 0);
-            this.player.body.setAllowGravity(true);
-            this.ballIsEntering = false;
-            GameState.isRunning = false;
-        }
-    }
-
-    if (GameState.isWin) {
-        const startX = -100;
-        const startY = this.groundSize * 11.55;
-
-        // reset player to left and glide in
-        this.player.setPosition(startX, startY);
-        this.player.body.setVelocity(150, 0);
-        this.player.body.setAllowGravity(false);
-
-        // score +1
-        GameState.addScore(1);
-        this.scoreText.setText(`${GameState.score}`);
-
-        // remove solidified blocks
-        if (this.groundBlocks) {
-            this.groundBlocks.clear(true, true);
-        }
-
-        // regenerate hole position, ground bodies, and outline for the next round
-        this.rebuildGroundAndHole();
-
-        // IMPORTANT: reset stacko tracking BEFORE creating new ones,
-        // so newly created shapes repopulate this.stackos and can be solidified on next Play.
-        this.stackos = [];
-
-        // spawn 4 fresh random stackos for the next round
-        createRandomShapesCenter(this, Shapes, 4, this.sceneSize.width / 2, 20, 30);
-
-        // prepare next round
-        GameState.isWin = false;
-        this.levelStartTime = this.time.now;
-        this.ballIsEntering = true;
-    }
-
-    // optional per-block collider toggling (kept as-is, but ensure flags are set correctly)
-    const blockSize = this.groundSize;
-    let hasBlockBelow = false;
-
-    this.blockColliders.forEach(entry => {
-        const block = entry.block;
-        const withinX = Math.abs(block.x - this.player.x) < blockSize * 0.5;
-        const belowY  = block.y >= this.player.y && block.y - this.player.y < blockSize;
-
-        entry.collider.active = withinX && belowY;
-
-        if (entry.collider.active) {
-            hasBlockBelow = false;
-        }
-    });
-
-    if (!hasBlockBelow) {
-        this.player.rotationSpeed = 0.0;
-    } else {
-        this.player.rotationSpeed = 0;
-    }
-}
 }
