@@ -16,21 +16,19 @@ export function updateMain(scene, time, delta) {
     if (!scene.player || !scene.player.body) return;
 
     if (GameState.isRunning) {
-        scene.player.body.setVelocityX(
-            Phaser.Math.Clamp(scene.player.body.velocity.x + scene.movePower, -scene.maxVelocityX, scene.maxVelocityX)
-        );
+        // Increase horizontal velocity gradually using physics-friendly method
+        const bodyVx = (scene.player.body && scene.player.body.velocity) ? scene.player.body.velocity.x : 0;
+        const desiredVx = Phaser.Math.Clamp(bodyVx + scene.movePower * (delta / 16.6667), -scene.maxVelocityX, scene.maxVelocityX);
+        const currentVy = (scene.player.body && scene.player.body.velocity) ? scene.player.body.velocity.y : 0;
+        if (scene.player.setVelocity) scene.player.setVelocity(desiredVx, currentVy);
 
-        if (scene.player.body.velocity.y > 10) {
-            scene.player.rotationSpeed = 0.01;
-        }
+        if (currentVy > 10) scene.player.rotationSpeed = 0.01;
 
-        const right = scene.player.getBounds().right;
+        const right = scene.player.x + (scene.player.displayWidth || 0) * 0.5;
         const screenRight = scene.sceneSize.width;
-        if (right >= screenRight - 1) {
-            GameState.isWin = true;
-        }
+        if (right >= screenRight - 1) GameState.isWin = true;
     } else {
-        scene.player.body.setVelocityX(0);
+        if (scene.player.setVelocity) scene.player.setVelocity(0, 0);
         scene.player.rotationSpeed = 0;
     }
 
@@ -38,8 +36,8 @@ export function updateMain(scene, time, delta) {
 
     if (scene.ballIsEntering) {
         if (scene.player.x >= 50) {
-            scene.player.body.setVelocity(0, 0);
-            scene.player.body.setAllowGravity(true);
+            if (scene.player.setVelocity) scene.player.setVelocity(0, 0);
+            if (scene.player.setIgnoreGravity) scene.player.setIgnoreGravity(false);
             scene.ballIsEntering = false;
             GameState.isRunning = false;
         }
@@ -49,15 +47,19 @@ export function updateMain(scene, time, delta) {
         const startX = -100;
         const startY = scene.groundSize * 11.55;
 
-        scene.player.setPosition(startX, startY);
-        scene.player.body.setVelocity(150, 0);
-        scene.player.body.setAllowGravity(false);
+    scene.player.setPosition(startX, startY);
+    if (scene.player.setVelocity) scene.player.setVelocity(150, 0);
+    if (scene.player.setIgnoreGravity) scene.player.setIgnoreGravity(true);
 
         GameState.addScore(1);
         scene.scoreText.setText(`${GameState.score}`);
 
-        if (scene.groundBlocks) {
-            scene.groundBlocks.clear(true, true);
+        if (scene.groundBlocks && Array.isArray(scene.groundBlocks)) {
+            scene.groundBlocks.forEach(b => {
+                if (b.body) scene.matter.world.remove(b.body);
+                if (b.sprite) b.sprite.destroy();
+            });
+            scene.groundBlocks.length = 0;
         }
 
         // regenerate hole position, ground bodies, and outline for the next round

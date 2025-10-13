@@ -133,9 +133,9 @@ export function solidifyStacko(scene, stacko, shape) {
     const snapX = dragRect.x;
     const snapY = dragRect.y;
 
-    // Ensure groundBlocks is a static physics group
+    // Ensure groundBlocks is an array of Matter bodies
     if (!scene.groundBlocks) {
-        scene.groundBlocks = scene.physics.add.staticGroup();
+        scene.groundBlocks = [];
     }
 
     // Ensure we have a valid texture when solidifying
@@ -152,32 +152,20 @@ export function solidifyStacko(scene, stacko, shape) {
     ghostBlocks.forEach(gb => gb.destroy());
     dragRect.destroy();
 
-    // Spawn static physics tiles
+    // Spawn Matter static bodies for each block
     shape.forEach(pos => {
-        // Use the static group to create a static physics sprite
-        const sprite = scene.groundBlocks.create(
-            snapX + pos.x * blockSize,
-            snapY + pos.y * blockSize,
-            textureKey || undefined // allow default if no texture
-        );
+        const wx = snapX + pos.x * blockSize + blockSize / 2;
+        const wy = snapY + pos.y * blockSize + blockSize / 2;
 
-        // Align top-left to grid and size body to the cell
-        sprite.setOrigin(0, 0);
-        sprite.setDisplaySize(blockSize, blockSize);
+        const body = scene.matter.add.rectangle(wx, wy, blockSize, blockSize, { isStatic: true });
+        const sprite = textureKey ? scene.add.image(snapX + pos.x * blockSize, snapY + pos.y * blockSize, textureKey)
+            .setOrigin(0, 0)
+            .setDisplaySize(blockSize, blockSize) : null;
 
-        // Ensure the Arcade body matches the visual size and position
-        if (sprite.body && sprite.body.setSize) {
-            sprite.body.setSize(blockSize, blockSize);
-        }
-        if (sprite.refreshBody) {
-            sprite.refreshBody();
-        }
+        scene.groundBlocks.push({ body, sprite, x: snapX + pos.x * blockSize, y: snapY + pos.y * blockSize });
     });
 
-    // Add collider once
-    if (!scene.__stackoGroundCollider) {
-        scene.__stackoGroundCollider = scene.physics.add.collider(scene.player, scene.groundBlocks);
-    }
+    // Matter handles collisions between the dynamic player and static ground blocks automatically.
 }
 
 // get shape dimensions

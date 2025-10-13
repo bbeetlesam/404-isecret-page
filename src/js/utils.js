@@ -9,19 +9,25 @@ export function checkOverlapWithGround(scene, snapX, snapY, shape) {
     const occupied = new Set();
     
     if (scene.grounds) {
-        scene.grounds.getChildren().forEach(ground => {
-            // all these are placed on the grid with origin (0, 0)
-            const gx = Math.round(ground.x / blockSize);
-            const gy = Math.round(ground.y / blockSize);
+        const groundsChildren = typeof scene.grounds.getChildren === 'function'
+            ? scene.grounds.getChildren()
+            : Array.isArray(scene.grounds) ? scene.grounds : [];
+
+        groundsChildren.forEach(ground => {
+            const gx = Math.round((ground.x ?? (ground.sprite && ground.sprite.x) ?? 0) / blockSize);
+            const gy = Math.round((ground.y ?? (ground.sprite && ground.sprite.y) ?? 0) / blockSize);
             occupied.add(key(gx, gy));
         });
     }
     
     if (scene.groundBlocks) {
-        scene.groundBlocks.getChildren().forEach(child => {
-            // solidified blocks and their visuals are also aligned to the grid
-            const gx = Math.round(child.x / blockSize);
-            const gy = Math.round(child.y / blockSize);
+        const blocksChildren = typeof scene.groundBlocks.getChildren === 'function'
+            ? scene.groundBlocks.getChildren()
+            : Array.isArray(scene.groundBlocks) ? scene.groundBlocks : [];
+
+        blocksChildren.forEach(child => {
+            const gx = Math.round((child.x ?? (child.sprite && child.sprite.x) ?? 0) / blockSize);
+            const gy = Math.round((child.y ?? (child.sprite && child.sprite.y) ?? 0) / blockSize);
             occupied.add(key(gx, gy));
         });
     }

@@ -8,7 +8,8 @@ import { drawHoleOutlines } from './utils.js';
 
 export function createMain(scene) {
     scene.sceneSize = { width: scene.scale.width, height: scene.scale.height };
-    scene.groundBlocks = scene.physics.add.staticGroup();
+    // Use arrays to store Matter bodies/sprites for ground and blocks
+    scene.groundBlocks = [];
     scene.isGameOver = false;
     scene.groundSize = 60;
     scene.groundAmount = { x: scene.sceneSize.width / scene.groundSize, y: scene.sceneSize.height / scene.groundSize };
@@ -21,8 +22,9 @@ export function createMain(scene) {
         }
     }
 
-    scene.maxVelocityX = 200;
-    scene.movePower = 7;
+    // set the max velocity and power for the car
+    scene.maxVelocityX = 8;
+    scene.movePower = 4;
 
     scene.scoreText = scene.add.text(scene.sceneSize.width - 110, 5, `${GameState.score}`, {
         fontSize: '85px', fontFamily: 'Clear Sans', color: '#ffffff',
@@ -50,7 +52,8 @@ export function createMain(scene) {
         }
 
         if (!scene.bridgeCollider) {
-            scene.bridgeCollider = scene.physics.add.collider(scene.player, scene.groundBlocks);
+            // Arcade collider isn't available with Matter; mark the flag instead.
+            scene.bridgeCollider = true;
         }
     });
 
@@ -78,35 +81,28 @@ export function createMain(scene) {
         GameState.isWin = true;
     });
 
-    // car falling physics
-    scene.player = scene.physics.add.image(50, scene.groundSize * 11, "car");
+    // Create the car as a Matter sprite so its body can rotate with the texture
+    scene.player = scene.matter.add.sprite(50, scene.groundSize * 11, 'car');
     scene.player.setScale(0.2);
-    scene.player.body.setBounce(0.2);
-    scene.player.body.setAllowGravity(true);
-    scene.player.body.setCollideWorldBounds(true);
-    scene.player.setDrag(0.5);
+    const pw = scene.player.displayWidth;
+    const ph = scene.player.displayHeight;
+    scene.player.setBody({ type: 'rectangle', width: pw, height: ph }, { chamfer: { radius: 8 } });
+    scene.player.setBounce(0.2);
+    scene.player.setFrictionAir(0.02);
+    scene.player.setFixedRotation(false);
     scene.player.setOrigin(0.5, 0.5);
     scene.player.rotationSpeed = 0;
 
-    scene.physics.add.collider(scene.player, scene.grounds, () => {
-        scene.player.body.setVelocity(150, 0);
-        scene.player.body.setAngularVelocity(0);
-        scene.player.body.setAllowGravity(true);
-        scene.player.rotationSpeed = 0;
-    });
-
-    scene.bridgeCollider = scene.physics.add.collider(scene.player, scene.groundBlocks);
-
+    // We'll manage block colliders via arrays of Matter bodies
     scene.blockColliders = [];
-    scene.groundBlocks.getChildren().forEach(block => {
-        let c = scene.physics.add.collider(scene.player, block);
-        scene.blockColliders.push({ block, collider: c });
-    });
 
     scene.cameras.main.startFollow(scene.player, true, 0.1, 0.1);
     scene.cameras.main.setBounds(0, 0, scene.sceneSize.width, scene.sceneSize.height);
 
-    scene.physics.add.collider(scene.player, scene.grounds);
+    // Remove Arcade collider call: project now uses Matter physics.
+    // Matter handles collisions between dynamic and static bodies automatically.
+    // Keep a boolean flag so other code can check for the existence of a collider.
+    scene.bridgeCollider = scene.bridgeCollider || false;
 
     // create random initial stackos
     createRandomShapesCenter(scene, Shapes, 4, scene.sceneSize.width / 2, 20, 30);

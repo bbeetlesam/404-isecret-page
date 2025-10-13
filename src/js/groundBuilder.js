@@ -1,22 +1,32 @@
 import { drawHoleOutlines } from "./utils.js";
 
 export function buildGroundAndHole(scene) {
-    scene.grounds = scene.physics.add.staticGroup();
+    // remove previous ground if present
+    if (scene.grounds && Array.isArray(scene.grounds)) {
+        scene.grounds.forEach(g => {
+            if (g.body) scene.matter.world.remove(g.body);
+            if (g.sprite) g.sprite.destroy();
+        });
+    }
+    scene.grounds = [];
 
     for (let i = 0; i < scene.sceneSize.height / scene.groundSize - 12; i++) {
         for (let j = 0; j < scene.sceneSize.width / scene.groundSize; j++) {
             const isHole = scene.holePositions.some(hole => hole.x === j && hole.y === i);
             if (isHole) continue;
 
-            const ground = scene.grounds.create(j * scene.groundSize, scene.groundSize * (12 + i), 'ground');
-            ground.setDisplaySize(scene.groundSize, scene.groundSize);
-            ground.setOrigin(0, 0);
-            ground.refreshBody();
+            const wx = j * scene.groundSize + scene.groundSize / 2;
+            const wy = scene.groundSize * (12 + i) + scene.groundSize / 2;
+
+            const body = scene.matter.add.rectangle(wx, wy, scene.groundSize, scene.groundSize, { isStatic: true });
+            const sprite = scene.add.image(j * scene.groundSize, scene.groundSize * (12 + i), 'ground')
+                .setDisplaySize(scene.groundSize, scene.groundSize)
+                .setOrigin(0, 0)
+                .setVisible(false);
+
+            scene.grounds.push({ body, sprite, x: j * scene.groundSize, y: scene.groundSize * (12 + i) });
         }
     }
-
-    // hide per-tile visuals
-    scene.grounds.getChildren().forEach(g => g.setVisible(false));
 
     const totalRows = Math.floor(scene.sceneSize.height / scene.groundSize);
     const groundTopRow = totalRows - 6;
@@ -24,7 +34,12 @@ export function buildGroundAndHole(scene) {
 }
 
 export function rebuildGroundAndHole(scene) {
-    if (scene.grounds) scene.grounds.clear(true, true);
+    if (scene.grounds) {
+        scene.grounds.forEach(g => {
+            if (g.body) scene.matter.world.remove(g.body);
+            if (g.sprite) g.sprite.destroy();
+        });
+    }
 
     // generate a new random hole position
     const holeStartPoint = Phaser.Math.Between(scene.groundAmount.x / 2, scene.groundAmount.x - 7);

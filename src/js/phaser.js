@@ -9,10 +9,11 @@ export const config = {
     pixelArt: false,
     antialias: true,
     physics: {
-        default: 'arcade',
-        arcade: {
-            gravity: { y: 350 },
-            debug: true
+        default: 'matter',
+        matter: {
+            gravity: { y: 1 },
+            debug: true,
+            debugBodyColor: 0xff00ff
         }
     },
     scale: {
