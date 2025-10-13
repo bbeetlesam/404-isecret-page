@@ -24,6 +24,15 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('click', (e) => {
     const canvas = document.querySelector('#game-id canvas');
     const gameId = document.getElementById('game-id');
+    const showBtn = document.getElementById('showGameButton');
+
+    if (showBtn && showBtn.getAttribute('src') === '') {
+        showBtn.src = './img/car.png';
+    }
+    const faviconEl = document.getElementById('favicon-placeholder');
+    if (faviconEl && (!faviconEl.getAttribute('href') || faviconEl.getAttribute('href') === '')) {
+        faviconEl.setAttribute('href', './img/car.png');
+    }
     
     // Show the canvas if clicked on the button
     if (e.target.id === 'showGameButton') {
