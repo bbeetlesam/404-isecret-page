@@ -6,7 +6,7 @@ import { triggerGameOver } from './gameOverManager.js';
 import { buildGroundAndHole } from './groundBuilder.js';
 import { drawHoleOutlines } from './utils.js';
 
-export function createMain(scene) {
+export async function createMain(scene) {
     scene.sceneSize = { width: scene.scale.width, height: scene.scale.height };
     // Use arrays to store Matter bodies/sprites for ground and blocks
     scene.groundBlocks = [];
@@ -23,9 +23,10 @@ export function createMain(scene) {
     }
 
     // set the max velocity and power for the car
-    scene.maxVelocityX = 5;
-    scene.movePower = 3;
+    scene.maxVelocityX = 4;
+    scene.movePower = 0.5;
 
+    await document.fonts.load('bold 85px "Clear Sans"');
     scene.scoreText = scene.add.text(scene.sceneSize.width - 110, 5, `${GameState.score}`, {
         fontSize: '85px', fontFamily: 'Clear Sans', color: '#ffffff',
     }).setOrigin(1, 0);
@@ -92,6 +93,38 @@ export function createMain(scene) {
     scene.player.setFixedRotation(false);
     scene.player.setOrigin(0.5, 0.5);
     scene.player.rotationSpeed = 0;
+
+    // 'remove' the car's collision force on X axis
+    scene._preservedPlayerVx = 0;
+    scene.matter.world.on('beforeupdate', () => {
+        if (scene.player && scene.player.body && scene.player.body.velocity) {
+            scene._preservedPlayerVx = scene.player.body.velocity.x;
+        }
+    });
+
+    scene.matter.world.on('collisionactive', (event) => {
+        if (!scene.player || !scene.player.body) return;
+        event.pairs.forEach(pair => {
+            const a = pair.bodyA;
+            const b = pair.bodyB;
+
+            let other = null;
+            if (a === scene.player.body) other = b;
+            else if (b === scene.player.body) other = a;
+            if (!other) return;
+
+            // Only restore horizontal velocity when colliding with static bodies
+            // (ground/solidified blocks are created as isStatic:true)
+            if (other.isStatic) {
+                const currentVy = scene.player.body.velocity ? scene.player.body.velocity.y : 0;
+                // restore horizontal velocity
+                if (scene.player.setVelocity) scene.player.setVelocity(scene._preservedPlayerVx || 0, currentVy);
+                // prevent collision from spinning the sprite
+                if (scene.player.setAngularVelocity) scene.player.setAngularVelocity(0);
+                scene.player.rotationSpeed = 0;
+            }
+        });
+    });
 
     // We'll manage block colliders via arrays of Matter bodies
     scene.blockColliders = [];
