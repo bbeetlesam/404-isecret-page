@@ -28,7 +28,9 @@ export function updateMain(scene, time, delta) {
         const screenRight = scene.sceneSize.width;
         if (right >= screenRight - 1) GameState.isWin = true;
     } else {
-        if (scene.player.setVelocity) scene.player.setVelocity(0, 0);
+        // keep vertical velocity untouched so the car can fall normally, even when idle
+        const currentVy = (scene.player.body && scene.player.body.velocity) ? scene.player.body.velocity.y : 0;
+        if (scene.player.setVelocity) scene.player.setVelocity(0, currentVy);
         scene.player.rotationSpeed = 0;
     }
 

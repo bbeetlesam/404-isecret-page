@@ -11,7 +11,7 @@ export const config = {
     physics: {
         default: 'matter',
         matter: {
-            gravity: { y: 2.5 },
+            gravity: { y: 2 },
             debug: true,
             debugBodyColor: 0xff00ff
         }
