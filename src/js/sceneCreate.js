@@ -23,8 +23,8 @@ export function createMain(scene) {
     }
 
     // set the max velocity and power for the car
-    scene.maxVelocityX = 8;
-    scene.movePower = 4;
+    scene.maxVelocityX = 5;
+    scene.movePower = 3;
 
     scene.scoreText = scene.add.text(scene.sceneSize.width - 110, 5, `${GameState.score}`, {
         fontSize: '85px', fontFamily: 'Clear Sans', color: '#ffffff',
