@@ -1,4 +1,4 @@
-# Stack of the Stucked Space
+# Stacks in the Space Stuck
 
 ohh fucking legs\
 idk we both are too lazy to finish this game just in time
