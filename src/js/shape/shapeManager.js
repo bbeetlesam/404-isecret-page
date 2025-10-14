@@ -1,4 +1,4 @@
-import { checkOverlapWithGround } from './utils.js';
+import { checkOverlapWithGround } from '../utils.js';
 
 // helper: pick a valid, preloaded texture key
 function chooseStackoTexture(scene) {
