@@ -1,6 +1,6 @@
 import GameState from './gameState.js';
 
-export function triggerGameOver(scene, reason = 'Game Over') {
+export function triggerGameOver(scene, reason = 'Waduh, nabrak wok!') {
     scene.isGameOver = true;
     GameState.isRunning = false;
     
@@ -13,7 +13,7 @@ export function triggerGameOver(scene, reason = 'Game Over') {
         color: '#f0635a'
     }).setOrigin(0.5);
     
-    scene.scoreText = scene.add.text(centerX, centerY + 10, `Cina Super: ${GameState.score}`, {
+    scene.scoreText = scene.add.text(centerX, centerY + 10, `Total Skor: ${GameState.score}`, {
         fontSize: '40px',
         fontFamily: 'Clear Sans',
         color: '#ffffff'
