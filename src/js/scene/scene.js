@@ -2,8 +2,8 @@
 import { preloadMain } from './scenePreload.js';
 import { createMain } from './sceneCreate.js';
 import { updateMain } from './sceneUpdate.js';
-import GameState from './gameState.js';
-import { rebuildGroundAndHole } from './groundBuilder.js';
+import GameState from '../gameState.js';
+import { rebuildGroundAndHole } from '../groundBuilder.js';
 
 export class MainScene extends Phaser.Scene {
     constructor() {

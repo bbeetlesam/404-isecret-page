@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { MainScene } from "./scene.js";
+import { MainScene } from "./scene/scene.js";
 
 // const isLandscape = window.innerWidth > window.innerHeight;
 

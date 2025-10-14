@@ -1,18 +1,18 @@
 // Import images so Vite bundles them. These imports resolve to URLs at runtime.
-import groundImg from '../assets/images/base-ground.png';
-import playImg from '../assets/images/play-button.png';
-import skyImg from '../assets/images/BG.png';
-import mountain1Img from '../assets/images/FG2.png';
-import planetImg from '../assets/images/PLANET.png';
-import starsImg from '../assets/images/STARS.png';
-import mountain2Img from '../assets/images/FG1.png';
-import craterImg from '../assets/images/FG3.png';
-import baseGroundImg from '../assets/images/base-ground.png';
-import stacko1Img from '../assets/images/block-1.png';
-import stacko2Img from '../assets/images/block-2.png';
-import stacko3Img from '../assets/images/block-3.png';
-import stacko4Img from '../assets/images/block-4.png';
-import stacko5Img from '../assets/images/block-5.png';
+import groundImg from '../../assets/images/base-ground.png';
+import playImg from '../../assets/images/play-button.png';
+import skyImg from '../../assets/images/BG.png';
+import mountain1Img from '../../assets/images/FG2.png';
+import planetImg from '../../assets/images/PLANET.png';
+import starsImg from '../../assets/images/STARS.png';
+import mountain2Img from '../../assets/images/FG1.png';
+import craterImg from '../../assets/images/FG3.png';
+import baseGroundImg from '../../assets/images/base-ground.png';
+import stacko1Img from '../../assets/images/block-1.png';
+import stacko2Img from '../../assets/images/block-2.png';
+import stacko3Img from '../../assets/images/block-3.png';
+import stacko4Img from '../../assets/images/block-4.png';
+import stacko5Img from '../../assets/images/block-5.png';
 
 // Preload assets for the main scene
 export function preloadMain(scene) {

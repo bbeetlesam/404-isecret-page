@@ -1,8 +1,8 @@
-import GameState from './gameState.js';
-import { createRandomShapesCenter } from './shapeManager.js';
-import Shapes from './shapes.js';
-import { rebuildGroundAndHole } from './groundBuilder.js';
-import { triggerGameOver } from './gameOverManager.js';
+import GameState from '../gameState.js';
+import { createRandomShapesCenter } from '../shapeManager.js';
+import Shapes from '../shapes.js';
+import { rebuildGroundAndHole } from '../groundBuilder.js';
+import { triggerGameOver } from '../gameOverManager.js';
 
 export function updateMain(scene, time, delta) {
     if (!scene.isGameOver && GameState.isRunning) {
@@ -27,6 +27,28 @@ export function updateMain(scene, time, delta) {
         const right = scene.player.x + (scene.player.displayWidth || 0) * 0.5;
         const screenRight = scene.sceneSize.width;
         if (right >= screenRight - 1) GameState.isWin = true;
+
+        // Front collision check: short raycast from car front to detect blocking static bodies
+        try {
+            const frontOffset = (scene.player.displayWidth || 0) * 0.5 + 2; // a few pixels in front
+            const origin = { x: scene.player.x + frontOffset, y: scene.player.y };
+            const target = { x: origin.x + 8, y: origin.y };
+
+            // Use Matter.Query.ray via Phaser's Matter instance
+            const Matter = Phaser.Physics.Matter.Matter;
+            const bodies = Matter.Composite.allBodies(scene.matter.world.localWorld);
+            const rayHits = Matter.Query.ray(bodies, origin, target);
+            if (rayHits && rayHits.length) {
+                // pick the first real body hit
+                const first = rayHits[0];
+                const hitBody = first && (first.body || first);
+                if (hitBody && hitBody.isStatic && !hitBody.isSensor) {
+                    triggerGameOver(scene, 'Kanjut Badag');
+                }
+            }
+        } catch (e) {
+            // ignore ray errors
+        }
     } else {
         // keep vertical velocity untouched so the car can fall normally, even when idle
         const currentVy = (scene.player.body && scene.player.body.velocity) ? scene.player.body.velocity.y : 0;

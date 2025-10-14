@@ -1,10 +1,10 @@
-import GameState from './gameState.js';
-import Shapes from './shapes.js';
-import { createRandomShapesCenter, solidifyStacko } from './shapeManager.js';
-import { createRaycastBetween } from './raycastUtils.js';
-import { triggerGameOver } from './gameOverManager.js';
-import { buildGroundAndHole } from './groundBuilder.js';
-import { drawHoleOutlines } from './utils.js';
+import GameState from '../gameState.js';
+import Shapes from '../shapes.js';
+import { createRandomShapesCenter, solidifyStacko } from '../shapeManager.js';
+import { createRaycastBetween } from '../raycastUtils.js';
+import { triggerGameOver } from '../gameOverManager.js';
+import { buildGroundAndHole } from '../groundBuilder.js';
+import { drawHoleOutlines } from '../utils.js';
 
 export async function createMain(scene) {
     scene.sceneSize = { width: scene.scale.width, height: scene.scale.height };
