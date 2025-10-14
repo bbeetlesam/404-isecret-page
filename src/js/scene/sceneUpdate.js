@@ -1,6 +1,6 @@
 import GameState from '../gameState.js';
-import { createRandomShapesCenter } from '../shapeManager.js';
-import Shapes from '../shapes.js';
+import { createRandomShapesCenter } from '../shape/shapeManager.js';
+import Shapes from '../shape/shapes.js';
 import { rebuildGroundAndHole } from '../groundBuilder.js';
 import { triggerGameOver } from '../gameOverManager.js';
 

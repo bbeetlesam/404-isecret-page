@@ -1,6 +1,6 @@
 import GameState from '../gameState.js';
-import Shapes from '../shapes.js';
-import { createRandomShapesCenter, solidifyStacko } from '../shapeManager.js';
+import Shapes from '../shape/shapes.js';
+import { createRandomShapesCenter, solidifyStacko } from '../shape/shapeManager.js';
 import { createRaycastBetween } from '../raycastUtils.js';
 import { triggerGameOver } from '../gameOverManager.js';
 import { buildGroundAndHole } from '../groundBuilder.js';
