@@ -8,7 +8,7 @@ export function updateMain(scene, time, delta) {
     if (!scene.isGameOver && GameState.isRunning) {
         const elapsed = scene.time.now - scene.levelStartTime;
         if (elapsed >= scene.levelTimeLimit) {
-            triggerGameOver(scene, 'Kanjut Badag');
+            triggerGameOver(scene);
         }
     }
 
@@ -43,7 +43,7 @@ export function updateMain(scene, time, delta) {
                 const first = rayHits[0];
                 const hitBody = first && (first.body || first);
                 if (hitBody && hitBody.isStatic && !hitBody.isSensor) {
-                    triggerGameOver(scene, 'Kanjut Badag');
+                    triggerGameOver(scene);
                 }
             }
         } catch (e) {
