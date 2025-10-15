@@ -235,16 +235,24 @@ export function createRandomShapes(scene, Shapes, amount = 3, startX = 0, startY
     }
 }
 
-export function createRandomShapesCenter(scene, Shapes, amount, centerX = 0, startY = 0, gap = 0) {
+export function createRandomShapesCenter(scene, Shapes, amount, centerX = 0, startY = 0, gap = 0, patternList = null) {
+    // Responsibility: layout & placement of stacko UI elements.
+    // If `patternList` (array of shape keys) is provided, use that list
+    // as the chosen shapes to place. Otherwise, fall back to random selection.
     if (!scene.shapeUIs) scene.shapeUIs = [];
     scene.shapeUIs.forEach(shape => shape.destroy());
     scene.shapeUIs = [];
-    
-    const allShapeKeys = Object.keys(Shapes);
-    const shuffled = Phaser.Utils.Array.Shuffle(allShapeKeys);
-    
-    const chosenShapes = shuffled.slice(0, amount);
-    
+
+        // If patternList provided, use it (slice to amount). Otherwise pick random shapes.
+        let chosenShapes;
+        if (Array.isArray(patternList) && patternList.length) {
+            chosenShapes = patternList.slice(0, amount);
+        } else {
+            const allShapeKeys = Object.keys(Shapes);
+            const shuffled = Phaser.Utils.Array.Shuffle(allShapeKeys);
+            chosenShapes = shuffled.slice(0, amount);
+        }
+
     let totalWidth = 0;
     const widths = [];
     chosenShapes.forEach(key => {
@@ -253,16 +261,16 @@ export function createRandomShapesCenter(scene, Shapes, amount, centerX = 0, sta
         totalWidth += width;
     });
     totalWidth += gap * (chosenShapes.length - 1);
-    
+
     let currentX = centerX - totalWidth / 2;
-    
+
     for (let i = 0; i < chosenShapes.length; i++) {
         const shape = Shapes[chosenShapes[i]];
         const width = widths[i];
-        
+
         const uiShape = createShape(scene, currentX, startY, shape);
         scene.shapeUIs.push(uiShape);
-        
+
         currentX += width + gap;
     }
 }
